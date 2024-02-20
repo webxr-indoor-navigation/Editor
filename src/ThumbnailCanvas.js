@@ -3,6 +3,7 @@ import ClipperLib from "clipper-lib";
 
 const ThumbnailCanvas = ({width, height, rectangles}) => {
     const canvasRef = useRef(null);
+    const [solutionJSON, setSolutionJSON] = useState(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -24,42 +25,29 @@ const ThumbnailCanvas = ({width, height, rectangles}) => {
             ];
             console.log(rectPath);
             clipper.AddPath(rectPath, ClipperLib.PolyType.ptClip, true);
-            pathColors.push(getRandomColor()); // 为每个路径生成一个随机颜色
         });
 
+        const unionPolygon = new ClipperLib.Paths();
+        clipper.Execute(ClipperLib.ClipType.ctUnion, unionPolygon, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
 
-        const solution = new ClipperLib.Paths();
-        clipper.Execute(ClipperLib.ClipType.ctUnion, solution, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+        if (unionPolygon.length > 0) {
+            setSolutionJSON(unionPolygon);
+            for (let i2 = 0; i2 < unionPolygon.length; i2++) {
+                ctx.beginPath();
+                ctx.fillStyle = getRandomColor();
+                ctx.strokeStyle = "black";
 
-        // console.log(rectangles);
-        // console.log(solution);
-        ctx.fillStyle = "red";
-        ctx.strokeStyle = "black";
-        ctx.beginPath();
-        for (let i2 = 0; i2 < solution.length; i2++) {
-            for (let j = 0; j < solution[i2].length; j++) {
-                let x = solution[i2][j].X * (canvas.width / width);
-                let y = solution[i2][j].Y * (canvas.height / height);
-                if (!j) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                for (let j = 0; j < unionPolygon[i2].length; j++) {
+                    let x = unionPolygon[i2][j].X * (canvas.width / width);
+                    let y = unionPolygon[i2][j].Y * (canvas.height / height);
+                    if (!j) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.fill();
+                ctx.closePath();
+                ctx.stroke();
             }
-            ctx.closePath();
         }
-        ctx.fill();
-        ctx.stroke();
-
-        // solution.forEach((path, index) => {
-        //     ctx.beginPath();
-        //     ctx.moveTo(path[0].X * (canvas.width / width), path[0].Y * (canvas.height / height));
-        //     path.slice(1).forEach(p => {
-        //         ctx.lineTo(p.X * (canvas.width / width), p.Y * (canvas.height / height));
-        //     });
-        //     ctx.closePath();
-        //     ctx.fillStyle = pathColors[index]; // 为每个路径设置不同的颜色
-        //     ctx.fill();
-        //     ctx.stroke();
-        // });
-
 
     }, [width, height, rectangles]);
 
@@ -72,7 +60,24 @@ const ThumbnailCanvas = ({width, height, rectangles}) => {
         return color;
     };
 
-    return <canvas ref={canvasRef} width={400} height={300} style={{border: '5px solid black'}}/>;
+    const exportSolutionAsJSON = () => {
+        if (solutionJSON) {
+            const json = JSON.stringify(solutionJSON);
+            const blob = new Blob([json], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'solution.json';
+            link.href = url;
+            link.click();
+        }
+    };
+
+    return (
+        <div>
+            <canvas ref={canvasRef} width={400} height={300} style={{border: '5px solid black'}}/>
+            <button onClick={exportSolutionAsJSON}>Export Solution as JSON</button>
+        </div>
+    )
 };
 
 export default ThumbnailCanvas;

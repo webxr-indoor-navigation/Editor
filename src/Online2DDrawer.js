@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
-
+// todo: rescale the input background image
 const Online2DDrawer = () => {
     const [backgroundImage, setBackgroundImage] = useState(null);
     const [rectangles, setRectangles] = useState([]);
