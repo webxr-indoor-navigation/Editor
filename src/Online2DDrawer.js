@@ -76,6 +76,22 @@ const Online2DDrawer = () => {
         reader.readAsDataURL(file);
     };
 
+    useEffect(() => {
+        const bgCanvas = backgroundCanvasRef.current;
+        const bg_ctx = bgCanvas.getContext('2d');
+
+        bg_ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+        // Draw background image
+        console.log("init");
+        const image = new Image();
+        image.onload = () => {
+            bg_ctx.drawImage(image, 0, 0, bgCanvas.width, bgCanvas.height);
+        };
+        image.src = process.env.PUBLIC_URL+"/rescaledFloorMap.jpg";
+
+    }, []);
+
+
     const handleCanvasClick = (event) => {
         const rect = mainCanvasRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -126,7 +142,7 @@ const Online2DDrawer = () => {
     };
 
     const handleKeyPress = (event) => {
-            console.log("ESC input");
+        console.log("ESC input");
 
         if (event.key === 'Escape') {
             setDrawing(false);
