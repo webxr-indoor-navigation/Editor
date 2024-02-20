@@ -125,6 +125,13 @@ const Online2DDrawer = () => {
         }
     };
 
+    const handleKeyPress = (event) => {
+            console.log("ESC input");
+
+        if (event.key === 'Escape') {
+            setDrawing(false);
+        }
+    };
 
     return (
         <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
@@ -145,6 +152,7 @@ const Online2DDrawer = () => {
                         style={{position: 'absolute', top: 0, left: 0, zIndex: 0}}
                     ></canvas>
                     <canvas
+                        onKeyDown={handleKeyPress} tabIndex={0}
                         ref={mainCanvasRef}
                         width={canvasWidth}
                         height={canvasHeight}
