@@ -43,7 +43,7 @@ const ThumbnailCanvas = ({width, height, rectangles}) => {
         });
     }, [width, height, rectangles]);
 
-    return <canvas ref={canvasRef} width={200} height={150} style={{border: '1px solid black'}}/>;
+    return <canvas ref={canvasRef} width={400} height={300} style={{border: '1px solid black'}}/>;
 };
 
 export default ThumbnailCanvas;

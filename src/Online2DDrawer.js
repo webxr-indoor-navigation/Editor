@@ -7,8 +7,8 @@ const Online2DDrawer = () => {
     const [drawing, setDrawing] = useState(false); // Whether drawing rectangle
     const [startPoint, setStartPoint] = useState({x: 0, y: 0}); // Starting point coordinates
     const [endPoint, setEndPoint] = useState({x: 0, y: 0}); // Diagonal point coordinates
-    const [canvasWidth, setCanvasWidth] = useState(800); // Canvas width
-    const [canvasHeight, setCanvasHeight] = useState(600); // Canvas height
+    const [canvasWidth, setCanvasWidth] = useState(1600); // Canvas width
+    const [canvasHeight, setCanvasHeight] = useState(1200); // Canvas height
     const [selectedRectangleIndex, setSelectedRectangleIndex] = useState(-1); // Index of selected rectangle
 
     const mainCanvasRef = useRef(null);
@@ -119,28 +119,35 @@ const Online2DDrawer = () => {
 
 
     return (
-        <div style={{position: 'relative'}}>
-            <input type="file" onChange={handleImageUpload}/>
-            <canvas
-                ref={backgroundCanvasRef} // Use ref for background canvas
-                width={canvasWidth}
-                height={canvasHeight}
-                style={{position: 'absolute', top: 100, left: 200, zIndex: 0, border: '1px solid black'}}
-            ></canvas>
-            <canvas
-                ref={mainCanvasRef}
-                width={canvasWidth}
-                height={canvasHeight}
-                // onMouseDown={handleCanvasMouseDown}
-                // onMouseUp={handleCanvasMouseUp}
-                onMouseMove={handleCanvasMouseMove}
-                onClick={handleCanvasClick}
-                onContextMenu={(event) => {
-                    event.preventDefault();
-                }}
-                style={{position: 'absolute', top: 100, left: 200, zIndex: 1, border: '1px solid black'}}
-            ></canvas>
-            <div style={{position: 'absolute', bottom: '10px', right: '10px'}}>
+        <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <input type="file" onChange={handleImageUpload} style={{marginBottom: '10px'}}/>
+            <div style={{position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                <div style={{
+                    marginRight: '60px', // Add margin-right to create space between canvases
+                    marginBottom: '10px',
+                    border: '1px solid black',
+                    width: canvasWidth,
+                    height: canvasHeight,
+                    position: 'relative'
+                }}>
+                    <canvas
+                        ref={backgroundCanvasRef} // Use ref for background canvas
+                        width={canvasWidth}
+                        height={canvasHeight}
+                        style={{position: 'absolute', top: 0, left: 0, zIndex: 0}}
+                    ></canvas>
+                    <canvas
+                        ref={mainCanvasRef}
+                        width={canvasWidth}
+                        height={canvasHeight}
+                        onMouseMove={handleCanvasMouseMove}
+                        onClick={handleCanvasClick}
+                        onContextMenu={(event) => {
+                            event.preventDefault();
+                        }}
+                        style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
+                    ></canvas>
+                </div>
                 <ThumbnailCanvas width={canvasWidth} height={canvasHeight} rectangles={rectangles}/>
             </div>
         </div>
