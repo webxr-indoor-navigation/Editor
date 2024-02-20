@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
 // todo: rescale the input background image
 const Online2DDrawer = () => {
     const [backgroundImage, setBackgroundImage] = useState(null);
     const [rectangles, setRectangles] = useState([]);
     const [drawing, setDrawing] = useState(false); // Whether drawing rectangle
-    const [startPoint, setStartPoint] = useState({ x: 0, y: 0 }); // Starting point coordinates
-    const [endPoint, setEndPoint] = useState({ x: 0, y: 0 }); // Diagonal point coordinates
+    const [startPoint, setStartPoint] = useState({x: 0, y: 0}); // Starting point coordinates
+    const [endPoint, setEndPoint] = useState({x: 0, y: 0}); // Diagonal point coordinates
     const [canvasWidth, setCanvasWidth] = useState(1600); // Canvas width
     const [canvasHeight, setCanvasHeight] = useState(1200); // Canvas height
     const [selectedRectangleIndex, setSelectedRectangleIndex] = useState(-1); // Index of selected rectangle
@@ -50,10 +50,11 @@ const Online2DDrawer = () => {
                     // Draw vertex coordinates
                     main_ctx.fillStyle = 'blue';
                     main_ctx.font = '12px Arial';
-                    main_ctx.fillText(`(${rect.x}, ${rect.y})`, rect.x - 30, rect.y - 10);
-                    main_ctx.fillText(`(${rect.x + rect.width}, ${rect.y})`, rect.x + rect.width, rect.y - 10);
-                    main_ctx.fillText(`(${rect.x + rect.width}, ${rect.y + rect.height})`, rect.x + rect.width, rect.y + rect.height + 15);
-                    main_ctx.fillText(`(${rect.x}, ${rect.y + rect.height})`, rect.x - 30, rect.y + rect.height + 15);
+                    main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y)})`, Math.round(rect.x) - 30, Math.round(rect.y) - 10);
+                    main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y)})`, Math.round(rect.x + rect.width), Math.round(rect.y) - 10);
+                    main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x + rect.width), Math.round(rect.y + rect.height) + 15);
+                    main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x) - 30, Math.round(rect.y + rect.height) + 15);
+
                 }
             });
 
@@ -82,13 +83,13 @@ const Online2DDrawer = () => {
 
         if (!drawing) {
             // Set start point and begin drawing
-            setStartPoint({ x, y });
-            setEndPoint({ x, y });
+            setStartPoint({x, y});
+            setEndPoint({x, y});
             setDrawing(true);
             setSelectedRectangleIndex(-1);
         } else {
             // Finish drawing
-            setEndPoint({ x, y });
+            setEndPoint({x, y});
             setDrawing(false);
 
             if (selectedRectangleIndex !== -1) {
@@ -99,7 +100,7 @@ const Online2DDrawer = () => {
                         const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
                         const newX = Math.min(startPoint.x, endPoint.x);
                         const newY = Math.min(startPoint.y, endPoint.y);
-                        return { x: newX, y: newY, width, height };
+                        return {x: newX, y: newY, width, height};
                     }
                     return rect;
                 });
@@ -109,7 +110,7 @@ const Online2DDrawer = () => {
                 const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
                 const newX = Math.min(startPoint.x, endPoint.x);
                 const newY = Math.min(startPoint.y, endPoint.y);
-                setRectangles(prevRectangles => [...prevRectangles, { x: newX, y: newY, width, height }]);
+                setRectangles(prevRectangles => [...prevRectangles, {x: newX, y: newY, width, height}]);
             }
         }
     };
@@ -120,15 +121,15 @@ const Online2DDrawer = () => {
             const rect = mainCanvasRef.current.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            setEndPoint({ x, y });
+            setEndPoint({x, y});
         }
     };
 
 
     return (
-        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <input type="file" onChange={handleImageUpload} style={{ marginBottom: '10px' }} />
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <input type="file" onChange={handleImageUpload} style={{marginBottom: '10px'}}/>
+            <div style={{position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
                 <div style={{
                     marginRight: '60px', // Add margin-right to create space between canvases
                     marginBottom: '10px',
@@ -141,7 +142,7 @@ const Online2DDrawer = () => {
                         ref={backgroundCanvasRef} // Use ref for background canvas
                         width={canvasWidth}
                         height={canvasHeight}
-                        style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }}
+                        style={{position: 'absolute', top: 0, left: 0, zIndex: 0}}
                     ></canvas>
                     <canvas
                         ref={mainCanvasRef}
@@ -152,10 +153,10 @@ const Online2DDrawer = () => {
                         onContextMenu={(event) => {
                             event.preventDefault();
                         }}
-                        style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+                        style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
                     ></canvas>
                 </div>
-                <ThumbnailCanvas width={canvasWidth} height={canvasHeight} rectangles={rectangles} />
+                <ThumbnailCanvas width={canvasWidth} height={canvasHeight} rectangles={rectangles}/>
             </div>
         </div>
     );

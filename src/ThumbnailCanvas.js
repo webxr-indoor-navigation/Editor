@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import ClipperLib from "clipper-lib";
+import ExtrudedPolygonExporter from "./ExtrudedPolygonExporter";
 
 const ThumbnailCanvas = ({width, height, rectangles}) => {
     const canvasRef = useRef(null);
@@ -75,7 +76,8 @@ const ThumbnailCanvas = ({width, height, rectangles}) => {
     return (
         <div>
             <canvas ref={canvasRef} width={400} height={300} style={{border: '5px solid black'}}/>
-            <button onClick={exportSolutionAsJSON}>Export Solution as JSON</button>
+            <button onClick={exportSolutionAsJSON}>Export JSON</button>
+            <ExtrudedPolygonExporter jsonData={solutionJSON}/>
         </div>
     )
 };
