@@ -68,60 +68,45 @@ const Online2DDrawer = () => {
         reader.readAsDataURL(file);
     };
 
-    const handleCanvasMouseDown = (event) => {
-        if (event.button !== 0) { // If not left mouse button, do nothing
-            return;
-        }
-
+    const handleCanvasClick = (event) => {
         const rect = mainCanvasRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        const clickedRectangleIndex = rectangles.findIndex(rect => {
-            return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height;
-        });
 
-        if (clickedRectangleIndex !== -1) {
-            setSelectedRectangleIndex(clickedRectangleIndex);
-        } else {
+        if (!drawing) {
+            // Set start point and begin drawing
             setStartPoint({x, y});
             setEndPoint({x, y});
             setDrawing(true);
             setSelectedRectangleIndex(-1);
-        }
-    };
-
-    const handleCanvasMouseUp = (event) => {
-        if (event.button !== 0) { // If not left mouse button, do nothing
-            return;
-        }
-
-        const rect = mainCanvasRef.current.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        setEndPoint({x, y});
-        setDrawing(false);
-
-        if (selectedRectangleIndex !== -1) {
-            // Update the selected rectangle's position and size
-            const newRectangles = rectangles.map((rect, index) => {
-                if (index === selectedRectangleIndex) {
-                    const width = Math.abs(endPoint.x - startPoint.x); // Calculate rectangle width
-                    const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
-                    const newX = Math.min(startPoint.x, endPoint.x);
-                    const newY = Math.min(startPoint.y, endPoint.y);
-                    return {x: newX, y: newY, width, height};
-                }
-                return rect;
-            });
-            setRectangles(newRectangles);
         } else {
-            const width = Math.abs(endPoint.x - startPoint.x); // Calculate rectangle width
-            const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
-            const newX = Math.min(startPoint.x, endPoint.x);
-            const newY = Math.min(startPoint.y, endPoint.y);
-            setRectangles(prevRectangles => [...prevRectangles, {x: newX, y: newY, width, height}]);
+            // Finish drawing
+            setEndPoint({x, y});
+            setDrawing(false);
+
+            if (selectedRectangleIndex !== -1) {
+                // Update the selected rectangle's position and size
+                const newRectangles = rectangles.map((rect, index) => {
+                    if (index === selectedRectangleIndex) {
+                        const width = Math.abs(endPoint.x - startPoint.x); // Calculate rectangle width
+                        const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
+                        const newX = Math.min(startPoint.x, endPoint.x);
+                        const newY = Math.min(startPoint.y, endPoint.y);
+                        return {x: newX, y: newY, width, height};
+                    }
+                    return rect;
+                });
+                setRectangles(newRectangles);
+            } else {
+                const width = Math.abs(endPoint.x - startPoint.x); // Calculate rectangle width
+                const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
+                const newX = Math.min(startPoint.x, endPoint.x);
+                const newY = Math.min(startPoint.y, endPoint.y);
+                setRectangles(prevRectangles => [...prevRectangles, {x: newX, y: newY, width, height}]);
+            }
         }
     };
+
 
     const handleCanvasMouseMove = (event) => {
         if (drawing && selectedRectangleIndex === -1) {
@@ -140,19 +125,20 @@ const Online2DDrawer = () => {
                 ref={backgroundCanvasRef} // Use ref for background canvas
                 width={canvasWidth}
                 height={canvasHeight}
-                style={{ position: 'absolute', top: 100, left: 200, zIndex: 0, border: '1px solid black' }}
+                style={{position: 'absolute', top: 100, left: 200, zIndex: 0, border: '1px solid black'}}
             ></canvas>
             <canvas
                 ref={mainCanvasRef}
                 width={canvasWidth}
                 height={canvasHeight}
-                onMouseDown={handleCanvasMouseDown}
-                onMouseUp={handleCanvasMouseUp}
+                // onMouseDown={handleCanvasMouseDown}
+                // onMouseUp={handleCanvasMouseUp}
                 onMouseMove={handleCanvasMouseMove}
+                onClick={handleCanvasClick}
                 onContextMenu={(event) => {
                     event.preventDefault();
                 }}
-                style={{ position: 'absolute', top: 100, left: 200, zIndex: 1, border: '1px solid black' }}
+                style={{position: 'absolute', top: 100, left: 200, zIndex: 1, border: '1px solid black'}}
             ></canvas>
             <div style={{position: 'absolute', bottom: '10px', right: '10px'}}>
                 <ThumbnailCanvas width={canvasWidth} height={canvasHeight} rectangles={rectangles}/>
