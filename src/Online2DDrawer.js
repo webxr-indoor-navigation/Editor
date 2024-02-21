@@ -14,10 +14,40 @@ const Online2DDrawer = () => {
     const [endPoint, setEndPoint] = useState({x: 0, y: 0}); // Diagonal point coordinates
     const [canvasWidth, setCanvasWidth] = useState(800); // Canvas width
     const [canvasHeight, setCanvasHeight] = useState(600); // Canvas height
+    const [history, setHistory] = useState([]); // 用于存储操作历史记录的数组
 
     // References for canvas elements
     const mainCanvasRef = useRef(null);
     const backgroundCanvasRef = useRef(null); // Ref for background image canvas
+
+    // 添加一个新的矩形到画布上，并记录操作历史
+    const addRectangle = (newRectangle) => {
+        setRectangles(prevRectangles => [...prevRectangles, newRectangle]);
+        setHistory(prevHistory => [...prevHistory, 'addRectangle']); // 记录操作历史
+    };
+    const addPOI = (newPOI) => {
+        setPOIs(prevPOIs => [...prevPOIs, newPOI]);
+        setHistory(prevHistory => [...prevHistory, 'addPOI']); // 记录操作历史
+    };
+
+     // 撤销最后一个操作
+    const undo = () => {
+        console.log("undo "+history.length);
+        if (history.length > 0) {
+            const lastOperation = history[history.length - 1];
+            switch (lastOperation) {
+                case 'addRectangle':
+                    setRectangles(prevRectangles => prevRectangles.slice(0, -1)); // 移除最后一个矩形
+                    break;
+                case 'addPOI':
+                    setPOIs(prevRectangles => prevRectangles.slice(0, -1)); // 移除最后一个矩形
+                    break;
+                default:
+                    break;
+            }
+            setHistory(prevHistory => prevHistory.slice(0, -1)); // 移除最后一个操作记录
+        }
+    };
 
     // Effect to draw background image when it changes
     useEffect(() => {
@@ -133,12 +163,12 @@ const Online2DDrawer = () => {
                     const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
                     const newX = Math.min(startPoint.x, endPoint.x);
                     const newY = Math.min(startPoint.y, endPoint.y);
-                    setRectangles(prevRectangles => [...prevRectangles, {x: newX, y: newY, width, height}]);
+                    addRectangle({x: newX, y: newY, width, height})
                     setDrawing(false);
                 }
                 break;
             case 'drawPOI':
-                setPOIs(prevPOIs => [...prevPOIs, {x: endPoint.x, y: endPoint.y, radius: '10'}]);
+                addPOI({x: endPoint.x, y: endPoint.y, radius: '10'})
                 break;
             default:
                 console.log("unknown user operation");
@@ -159,11 +189,17 @@ const Online2DDrawer = () => {
         if (event.key === 'Escape') {
             console.log("ESC input");
             setDrawing(false);
+            return
+        }
+
+        if (event.metaKey && event.key === 'z') {
+            undo(); // 当用户按下Ctrl+Z时执行撤销操作
         }
     };
 
     // Function to handle shape type change
     const handleShapeTypeChange = (event) => {
+        setDrawing(false);
         setUserOperation(event.target.value);
     };
 
