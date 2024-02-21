@@ -301,7 +301,7 @@ const Online2DDrawer = () => {
                                  POIs={POIs}/>
             </div>
             <div>
-                <label htmlFor="shapeType">Shape Type:</label>
+                <label htmlFor="shapeType">User Operation:</label>
                 <select id="shapeType" value={userOperation} onChange={handleShapeTypeChange}>
                     <option value="drawCorridor">draw corridor (walkable area)</option>
                     <option value="drawPOI">add POI (destination)</option>
