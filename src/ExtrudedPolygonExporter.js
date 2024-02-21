@@ -42,7 +42,7 @@ const ExtrudedPolygonExporter = ({jsonData}) => {
 
     return (
         <div>
-            <button onClick={exportOBJ}>Export OBJ</button>
+            <button onClick={exportOBJ}>Export OBJ - corridor</button>
         </div>
     );
 };

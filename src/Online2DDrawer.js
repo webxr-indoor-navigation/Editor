@@ -233,7 +233,7 @@ const Online2DDrawer = () => {
                         style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
                     ></canvas>
                 </div>
-                <ThumbnailCanvas width={canvasWidth} height={canvasHeight} rectangles={rectangles}/>
+                <ThumbnailCanvas mainCanvasWidth={canvasWidth} mainCanvasHeight={canvasHeight} rectangles={rectangles} POIs={POIs}/>
             </div>
             <div>
                 <label htmlFor="shapeType">Shape Type:</label>
