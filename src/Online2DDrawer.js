@@ -19,6 +19,7 @@ const Online2DDrawer = () => {
     const [canvasWidth, setCanvasWidth] = useState(800); // Canvas width
     const [canvasHeight, setCanvasHeight] = useState(600); // Canvas height
     const [history, setHistory] = useState([]); // 用于存储操作历史记录的数组
+    const [redoHistory, setRedoHistory] = useState([]); // 用于存储撤销的操作历史记录的数组
 
     // References for canvas elements
     const mainCanvasRef = useRef(null);
@@ -27,19 +28,22 @@ const Online2DDrawer = () => {
     // 添加一个新的矩形到画布上，并记录操作历史
     const addRectangle = (newRectangle) => {
         setRectangles(prevRectangles => [...prevRectangles, newRectangle]);
-        setHistory(prevHistory => [...prevHistory, 'addRectangle']); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {'type': 'addRectangle', 'args': newRectangle}]); // 记录操作历史
     };
     const addPOI = (newPOI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
-        setHistory(prevHistory => [...prevHistory, 'addPOI']); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {'type': 'addPOI', 'args': newPOI}]); // 记录操作历史
     };
 
      // 撤销最后一个操作
     const undo = () => {
-        console.log("undo "+history.length);
         if (history.length > 0) {
+            console.log("history length: "+history.length);
+
             const lastOperation = history[history.length - 1];
-            switch (lastOperation) {
+            const lastOperationType = lastOperation['type'];
+
+            switch (lastOperationType) {
                 case 'addRectangle':
                     setRectangles(prevRectangles => prevRectangles.slice(0, -1)); // 移除最后一个矩形
                     break;
@@ -49,9 +53,33 @@ const Online2DDrawer = () => {
                 default:
                     break;
             }
+            setRedoHistory(prevRedoHistory => [...prevRedoHistory, lastOperation]); // 将操作添加到重做历史中
             setHistory(prevHistory => prevHistory.slice(0, -1)); // 移除最后一个操作记录
         }
     };
+
+    // 重做最后一个撤销的操作
+    const redo = () => {
+        if (redoHistory.length > 0) {
+            console.log("redoHistory length: "+redoHistory.length);
+
+            const lastUndoOperation = redoHistory[redoHistory.length-1];
+            const lastUndoOperationType = lastUndoOperation['type'];
+            const args = redoHistory[redoHistory.length - 1]['args'];
+            switch (lastUndoOperationType) {
+                case 'addRectangle':
+                    addRectangle(args);
+                    break;
+                case 'addPOI':
+                    addPOI(args);
+                    break;
+                default:
+                    break;
+            }
+            setRedoHistory(prevRedoHistory => prevRedoHistory.slice(0, -1)); // 从重做历史中移除最后一个操作
+        }
+    };
+
 
     // Effect to draw background image when it changes
     useEffect(() => {
@@ -90,7 +118,7 @@ const Online2DDrawer = () => {
                 main_ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
                 // Draw vertex coordinates
                 main_ctx.fillStyle = 'blue';
-                main_ctx.font = '12px Arial';
+                main_ctx.font = '16px Arial';
                 main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y)})`, Math.round(rect.x) - 30, Math.round(rect.y) - 10);
                 main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y)})`, Math.round(rect.x + rect.width), Math.round(rect.y) - 10);
                 main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x + rect.width), Math.round(rect.y + rect.height) + 15);
@@ -99,11 +127,15 @@ const Online2DDrawer = () => {
 
             main_ctx.strokeStyle = 'orange';
             main_ctx.lineWidth = 2;
-            POIs.forEach((circle, index) => {
+            POIs.forEach((POI, index) => {
                 main_ctx.beginPath();
-                main_ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+                main_ctx.arc(POI.x, POI.y, POI.radius, 0, 2 * Math.PI);
                 main_ctx.stroke();
                 main_ctx.closePath();
+
+                // Draw vertex coordinates
+                main_ctx.font = '16px Arial';
+                main_ctx.fillText(`(${Math.round(POI.x)}, ${Math.round(POI.y)})`, Math.round(POI.x) - 30, Math.round(POI.y) - 10);
             });
 
             // for preview purpose: drawing temporary shape (from start point to current mouse position)
@@ -196,9 +228,20 @@ const Online2DDrawer = () => {
             return
         }
 
+        if ( event.shiftKey && event.metaKey && event.key === 'z') {
+            redo(); // 当用户按下Ctrl+Z时执行撤销操作
+            return;
+        }
+
         if (event.metaKey && event.key === 'z') {
             undo(); // 当用户按下Ctrl+Z时执行撤销操作
+            return;
         }
+
+        if (1){
+
+        }
+
     };
 
     // Function to handle shape type change
