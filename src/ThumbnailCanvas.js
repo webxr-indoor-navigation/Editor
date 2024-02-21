@@ -92,6 +92,17 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs}) 
         }
     };
 
+    const exportSolutionAsPNG = () => {
+        const canvas = canvasRef.current;
+        const link = document.createElement('a');
+        canvas.toBlob((blob) => {
+            link.download = 'whole-view.png';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        });
+    };
+
+
     const exportPOIAsJSON = () => {
         if (POIs) {
             // todo: user need to name the POIs before export
@@ -117,6 +128,7 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs}) 
             <button onClick={exportPOIAsJSON}>Export JSON - POIs</button>
             <button onClick={exportSolutionAsJSON}>Export JSON - corridor</button>
             <ExtrudedPolygonExporter jsonData={walkableAreaJSON}/>
+            <button onClick={exportSolutionAsPNG}>Export PNG - whole</button>
         </div>
     )
 };
