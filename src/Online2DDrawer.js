@@ -1,7 +1,11 @@
 import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
+import { v4 as uuid } from 'uuid';
 
 // todo: rescale the input background image
+const generateUUID = () => {
+        return uuid();
+    };
 
 const Online2DDrawer = () => {
     // State variables initialization
@@ -168,7 +172,7 @@ const Online2DDrawer = () => {
                 }
                 break;
             case 'drawPOI':
-                addPOI({x: endPoint.x, y: endPoint.y, radius: '10'})
+                addPOI({x: endPoint.x, y: endPoint.y, radius: '10', uuid: generateUUID()})
                 break;
             default:
                 console.log("unknown user operation");
