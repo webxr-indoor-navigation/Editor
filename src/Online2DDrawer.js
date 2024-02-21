@@ -7,7 +7,7 @@ const Online2DDrawer = () => {
 	// State variables initialization
 	const [backgroundImage, setBackgroundImage] = useState(null);
 	const [rectangles, setRectangles] = useState([]);
-	const [circles, setCircles] = useState([]);
+	const [POIs, setPOIs] = useState([]);
 	const [drawing, setDrawing] = useState(false); // Whether drawing rectangle or circle
 	const [userOperation, setUserOperation] = useState('drawCorridor'); // Type of shape to draw
 	const [startPoint, setStartPoint] = useState({ x: 0, y: 0 }); // Starting point coordinates
@@ -66,7 +66,7 @@ const Online2DDrawer = () => {
 				}
 			});
 
-			circles.forEach((circle, index) => {
+			POIs.forEach((circle, index) => {
 				if (index !== selectedShapeIndex) {
 					main_ctx.beginPath();
 					main_ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
@@ -79,18 +79,12 @@ const Online2DDrawer = () => {
 			if (drawing) {
 				if (userOperation === 'drawCorridor') {
 					main_ctx.strokeRect(startPoint.x, startPoint.y, endPoint.x - startPoint.x, endPoint.y - startPoint.y);
-				} else if (userOperation === 'drawPOI') {
-					const radius = Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
-					main_ctx.beginPath();
-					main_ctx.arc(startPoint.x, startPoint.y, radius, 0, 2 * Math.PI);
-					main_ctx.stroke();
-					main_ctx.closePath();
 				}
 			}
 		};
 
 		drawCanvas();
-	}, [rectangles, circles, drawing, startPoint, endPoint, userOperation, canvasWidth, canvasHeight, selectedShapeIndex]);
+	}, [rectangles, POIs, drawing, startPoint, endPoint, userOperation, canvasWidth, canvasHeight, selectedShapeIndex]);
 
 	// Function to handle image upload
 	const handleImageUpload = (event) => {
@@ -152,13 +146,13 @@ const Online2DDrawer = () => {
 					setRectangles(newRectangles);
 				} else if (userOperation === 'drawPOI') {
 					const radius = Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
-					const newCircles = circles.map((circle, index) => {
+					const newCircles = POIs.map((circle, index) => {
 						if (index === selectedShapeIndex) {
 							return { x: startPoint.x, y: startPoint.y, radius };
 						}
 						return circle;
 					});
-					setCircles(newCircles);
+					setPOIs(newCircles);
 				}
 			} else {
 				if (userOperation === 'drawCorridor') {
@@ -169,7 +163,7 @@ const Online2DDrawer = () => {
 					setRectangles(prevRectangles => [...prevRectangles, { x: newX, y: newY, width, height }]);
 				} else if (userOperation === 'drawPOI') {
 					const radius = Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
-					setCircles(prevCircles => [...prevCircles, { x: startPoint.x, y: startPoint.y, radius }]);
+					setPOIs(prevCircles => [...prevCircles, { x: startPoint.x, y: startPoint.y, radius }]);
 				}
 			}
 		}
