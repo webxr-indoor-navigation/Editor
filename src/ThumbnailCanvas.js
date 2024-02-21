@@ -94,12 +94,8 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs}) 
 
     const exportPOIAsJSON = () => {
         if (POIs) {
-            const modifiedPOIs = POIs.map(poi => {
-                const {radius, ...rest} = poi; // 使用解构赋值删除radius属性
-                return rest;
-            });
             // todo: user need to name the POIs before export
-            const json = JSON.stringify(modifiedPOIs);
+            const json = JSON.stringify(POIs);
             const blob = new Blob([json], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');

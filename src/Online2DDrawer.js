@@ -1,11 +1,11 @@
 import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
-import { v4 as uuid } from 'uuid';
+import {v4 as uuid} from 'uuid';
 
 // todo: rescale the input background image
 const generateUUID = () => {
-        return uuid();
-    };
+    return uuid();
+};
 
 const Online2DDrawer = () => {
     // State variables initialization
@@ -34,11 +34,14 @@ const Online2DDrawer = () => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
         setHistory(prevHistory => [...prevHistory, {'type': 'addPOI', 'args': newPOI}]); // 记录操作历史
     };
+    const previewPOI = (newPOI) => {
+        setPOIs(prevPOIs => [...prevPOIs, newPOI]);
+    };
 
-     // 撤销最后一个操作
+    // 撤销最后一个操作
     const undo = () => {
         if (history.length > 0) {
-            console.log("history length: "+history.length);
+            console.log("history length: " + history.length);
 
             const lastOperation = history[history.length - 1];
             const lastOperationType = lastOperation['type'];
@@ -48,7 +51,7 @@ const Online2DDrawer = () => {
                     setRectangles(prevRectangles => prevRectangles.slice(0, -1)); // 移除最后一个矩形
                     break;
                 case 'addPOI':
-                    setPOIs(prevRectangles => prevRectangles.slice(0, -1)); // 移除最后一个矩形
+                    setPOIs(prevPOIs => prevPOIs.slice(0, -1)); // 移除最后一个矩形
                     break;
                 default:
                     break;
@@ -61,9 +64,9 @@ const Online2DDrawer = () => {
     // 重做最后一个撤销的操作
     const redo = () => {
         if (redoHistory.length > 0) {
-            console.log("redoHistory length: "+redoHistory.length);
+            console.log("redoHistory length: " + redoHistory.length);
 
-            const lastUndoOperation = redoHistory[redoHistory.length-1];
+            const lastUndoOperation = redoHistory[redoHistory.length - 1];
             const lastUndoOperationType = lastUndoOperation['type'];
             const args = redoHistory[redoHistory.length - 1]['args'];
             switch (lastUndoOperationType) {
@@ -129,13 +132,14 @@ const Online2DDrawer = () => {
             main_ctx.lineWidth = 2;
             POIs.forEach((POI, index) => {
                 main_ctx.beginPath();
-                main_ctx.arc(POI.x, POI.y, POI.radius, 0, 2 * Math.PI);
+                const radius = 10;
+                main_ctx.arc(POI.x, POI.y, radius, 0, 2 * Math.PI);
                 main_ctx.stroke();
                 main_ctx.closePath();
 
                 // Draw vertex coordinates
                 main_ctx.font = '16px Arial';
-                main_ctx.fillText(`(${Math.round(POI.x)}, ${Math.round(POI.y)})`, Math.round(POI.x) - 30, Math.round(POI.y) - 10);
+                main_ctx.fillText("."+POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
             });
 
             // for preview purpose: drawing temporary shape (from start point to current mouse position)
@@ -204,7 +208,20 @@ const Online2DDrawer = () => {
                 }
                 break;
             case 'drawPOI':
-                addPOI({x: endPoint.x, y: endPoint.y, radius: '10', uuid: generateUUID()})
+                previewPOI({x: endPoint.x, y: endPoint.y, uuid: generateUUID(), name: '!!!'})
+
+                setTimeout(() => {
+                    const poiName = window.prompt('Please enter the name of the POI:'); // 弹出对话框让用户输入 POI 名称
+                    setPOIs(prevPOIs => prevPOIs.slice(0, -1)); // 移除最后一个矩形
+                    if (poiName === null) { // 用户点击了取消按钮
+                        return; // 直接返回，不执行后续代码
+                    }
+                    if (poiName.trim() === '') { // 用户输入为空
+                        window.alert('POI name cannot be empty. Please enter a valid name.'); // 提示用户输入不能为空
+                        return; // 直接返回，不执行后续代码
+                    }
+                    addPOI({x: endPoint.x, y: endPoint.y, uuid: generateUUID(), name: poiName}); // 添加 POI
+                }, 100); // 设置延迟 100 毫秒
                 break;
             default:
                 console.log("unknown user operation");
@@ -228,8 +245,8 @@ const Online2DDrawer = () => {
             return
         }
 
-        if ( event.shiftKey && event.metaKey && event.key === 'z') {
-            redo(); // 当用户按下Ctrl+Z时执行撤销操作
+        if (event.shiftKey && event.metaKey && event.key === 'z') {
+            redo(); // 当用户按下shift+Ctrl+Z时执行撤销操作
             return;
         }
 
@@ -238,7 +255,7 @@ const Online2DDrawer = () => {
             return;
         }
 
-        if (1){
+        if (1) {
 
         }
 
@@ -280,7 +297,8 @@ const Online2DDrawer = () => {
                         style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
                     ></canvas>
                 </div>
-                <ThumbnailCanvas mainCanvasWidth={canvasWidth} mainCanvasHeight={canvasHeight} rectangles={rectangles} POIs={POIs}/>
+                <ThumbnailCanvas mainCanvasWidth={canvasWidth} mainCanvasHeight={canvasHeight} rectangles={rectangles}
+                                 POIs={POIs}/>
             </div>
             <div>
                 <label htmlFor="shapeType">Shape Type:</label>
