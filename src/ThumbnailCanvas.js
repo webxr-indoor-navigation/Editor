@@ -74,7 +74,7 @@ const ThumbnailCanvas = ({width, height, rectangles}) => {
     };
 
     return (
-        <div>
+        <div style={{position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'self-start', margin: '20px'}}>
             <canvas ref={canvasRef} width={400} height={300} style={{border: '5px solid black'}}/>
             <button onClick={exportSolutionAsJSON}>Export JSON</button>
             <ExtrudedPolygonExporter jsonData={solutionJSON}/>

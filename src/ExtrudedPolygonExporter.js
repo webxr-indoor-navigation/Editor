@@ -3,8 +3,9 @@ import {Vector2, Shape, ExtrudeGeometry, MeshBasicMaterial, Mesh} from 'three';
 import {OBJExporter} from 'three/addons/exporters/OBJExporter.js';
 
 const ExtrudedPolygonExporter = ({jsonData}) => {
-
+    // todo: currently, it is limited to output only one obj file...
     const exportOBJ = () => {
+        if (jsonData==null) return;
         const vertices = jsonData[0].map(point => new Vector2(point.X, point.Y));
         console.log(vertices);
 
