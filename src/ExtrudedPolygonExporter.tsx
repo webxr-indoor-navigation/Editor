@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {Vector2, Shape, ExtrudeGeometry, MeshBasicMaterial, Mesh} from 'three';
 import {OBJExporter} from "three/examples/jsm/exporters/OBJExporter";
 
 
 interface ExtrudedPolygonExporterParams {
-    jsonData: [[{ X: number, Y: number }]];
+    jsonData: [[{ X: number, Y: number }]] | undefined;
 }
 
 const ExtrudedPolygonExporter = (props: ExtrudedPolygonExporterParams) => {

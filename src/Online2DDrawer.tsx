@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
-import {v4 as uuid} from 'uuid';
+import { v4 as uuid } from 'uuid';
+import {History, POI, Point, Rect, Scale} from "./types";
 
 const userOperations = {
     drawCorridor: "drawCorridor",
@@ -8,58 +9,56 @@ const userOperations = {
     addScale: "addScale"
 };
 
-
-// todo: rescale the input background image
 const generateUUID = () => {
     return uuid();
 };
 
 const Online2DDrawer = () => {
     // State variables initialization
-    const [backgroundImage, setBackgroundImage] = useState(null);
-    const [rectangles, setRectangles] = useState([]);
-    const [POIs, setPOIs] = useState([]);
-    const [scale, setScale] = useState(null);
+    const [backgroundImage, setBackgroundImage] = useState<any>();
+    const [rectangles, setRectangles] = useState<Rect[]>([]);
+    const [POIs, setPOIs] = useState<POI[]>([]);
+    const [scale, setScale] = useState<Scale>();
     const [drawing, setDrawing] = useState(false); // Whether drawing rectangle or circle
     const [userOperation, setUserOperation] = useState(userOperations.drawCorridor); // Type of shape to draw
-    const [startPoint, setStartPoint] = useState({x: 0, y: 0}); // Starting point coordinates
-    const [endPoint, setEndPoint] = useState({x: 0, y: 0}); // Diagonal point coordinates
-    const [canvasWidth, setCanvasWidth] = useState(800); // Canvas width
-    const [canvasHeight, setCanvasHeight] = useState(600); // Canvas height
-    const [history, setHistory] = useState([]); // 用于存储操作历史记录的数组
-    const [redoHistory, setRedoHistory] = useState([]); // 用于存储撤销的操作历史记录的数组
+    const [startPoint, setStartPoint] = useState<Point>({X: 0, Y: 0}); // Starting point coordinates
+    const [endPoint, setEndPoint] = useState<Point>({X: 0, Y: 0}); // Diagonal point coordinates
+    const [canvasWidth] = useState<number>(800); // Canvas width
+    const [canvasHeight, setCanvasHeight] = useState<number>(600); // Canvas height
+    const [history, setHistory] = useState<History[]>([]); // 用于存储操作历史记录的数组
+    const [redoHistory, setRedoHistory] = useState<History[]>([]); // 用于存储撤销的操作历史记录的数组
 
     // References for canvas elements
-    const mainCanvasRef = useRef(null);
-    const backgroundCanvasRef = useRef(null); // Ref for background image canvas
+    const mainCanvasRef = useRef<any>(null);
+    const backgroundCanvasRef = useRef<any>(null); // Ref for background image canvas
 
     // 添加一个新的矩形到画布上，并记录操作历史
 
 
-    const addScale = (newScale) => {
+    const addScale = (newScale: Scale) => {
         setScale(newScale);
-        setHistory(prevHistory => [...prevHistory, {'type': userOperations.addScale, 'args': newScale}]); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {type: userOperations.addScale, args: newScale}]); // 记录操作历史
     };
 
-    const addRectangle = (newRectangle) => {
+    const addRectangle = (newRectangle: Rect) => {
         setRectangles(prevRectangles => [...prevRectangles, newRectangle]);
-        setHistory(prevHistory => [...prevHistory, {'type': userOperations.drawCorridor, 'args': newRectangle}]); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {type: userOperations.drawCorridor, args: newRectangle}]); // 记录操作历史
     };
-    const addPOI = (newPOI) => {
+    const addPOI = (newPOI: POI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
-        setHistory(prevHistory => [...prevHistory, {'type': userOperations.drawPOI, 'args': newPOI}]); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {type: userOperations.drawPOI, args: newPOI}]); // 记录操作历史
     };
-    const previewPOI = (newPOI) => {
+    const previewPOI = (newPOI: POI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
     };
 
     // 撤销最后一个操作
     const undo = () => {
-        if (history.length > 0) {
+        if (history) {
             console.log("history length: " + history.length);
 
             const lastOperation = history[history.length - 1];
-            const lastOperationType = lastOperation['type'];
+            const lastOperationType = lastOperation.type;
 
             switch (lastOperationType) {
                 case userOperations.drawCorridor:
@@ -69,7 +68,7 @@ const Online2DDrawer = () => {
                     setPOIs(prevPOIs => prevPOIs.slice(0, -1));
                     break;
                 case userOperations.addScale:
-                    setScale(1)
+                    setScale(undefined)
                     break;
                 default:
                     break;
@@ -81,12 +80,12 @@ const Online2DDrawer = () => {
 
     // 重做最后一个撤销的操作
     const redo = () => {
-        if (redoHistory.length > 0) {
+        if (redoHistory) {
             console.log("redoHistory length: " + redoHistory.length);
 
             const lastUndoOperation = redoHistory[redoHistory.length - 1];
-            const lastUndoOperationType = lastUndoOperation['type'];
-            const args = redoHistory[redoHistory.length - 1]['args'];
+            const lastUndoOperationType = lastUndoOperation.type;
+            const args = redoHistory[redoHistory.length - 1].args;
             switch (lastUndoOperationType) {
                 case userOperations.drawCorridor:
                     addRectangle(args);
@@ -117,31 +116,34 @@ const Online2DDrawer = () => {
             main_ctx.strokeStyle = 'red';
             main_ctx.lineWidth = 2;
 
-            rectangles.forEach((rect, index) => {
-                main_ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-                // Draw vertex coordinates
-                main_ctx.fillStyle = 'blue';
-                main_ctx.font = '16px Arial';
-                main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y)})`, Math.round(rect.x) - 30, Math.round(rect.y) - 10);
-                main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y)})`, Math.round(rect.x + rect.width), Math.round(rect.y) - 10);
-                main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x + rect.width), Math.round(rect.y + rect.height) + 15);
-                main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x) - 30, Math.round(rect.y + rect.height) + 15);
-            });
+            if (rectangles)
+                rectangles.forEach((rect: Rect) => {
+                    main_ctx.strokeRect(rect.X, rect.Y, rect.width, rect.height);
+                    // Draw vertex coordinates
+                    main_ctx.fillStyle = 'blue';
+                    main_ctx.font = '16px Arial';
+                    main_ctx.fillText(`(${Math.round(rect.X)}, ${Math.round(rect.Y)})`, Math.round(rect.X) - 30, Math.round(rect.Y) - 10);
+                    main_ctx.fillText(`(${Math.round(rect.X + rect.width)}, ${Math.round(rect.Y)})`, Math.round(rect.X + rect.width), Math.round(rect.Y) - 10);
+                    main_ctx.fillText(`(${Math.round(rect.X + rect.width)}, ${Math.round(rect.Y + rect.height)})`, Math.round(rect.X + rect.width), Math.round(rect.Y + rect.height) + 15);
+                    main_ctx.fillText(`(${Math.round(rect.X)}, ${Math.round(rect.Y + rect.height)})`, Math.round(rect.X) - 30, Math.round(rect.Y + rect.height) + 15);
+                });
 
             // draw POIs
             main_ctx.strokeStyle = 'orange';
             main_ctx.lineWidth = 2;
-            POIs.forEach((POI, index) => {
-                main_ctx.beginPath();
-                const radius = 10;
-                main_ctx.arc(POI.X, POI.Y, radius, 0, 2 * Math.PI);
-                main_ctx.stroke();
-                main_ctx.closePath();
 
-                // Draw vertex coordinates
-                main_ctx.font = '16px Arial';
-                main_ctx.fillText("." + POI.name, Math.round(POI.X) - 15, Math.round(POI.Y) - 15);
-            });
+            if (POIs)
+                POIs.forEach(POI => {
+                    main_ctx.beginPath();
+                    const radius = 10;
+                    main_ctx.arc(POI.X, POI.Y, radius, 0, 2 * Math.PI);
+                    main_ctx.stroke();
+                    main_ctx.closePath();
+
+                    // Draw vertex coordinates
+                    main_ctx.font = '16px Arial';
+                    main_ctx.fillText("." + POI.name, Math.round(POI.X) - 15, Math.round(POI.Y) - 15);
+                });
 
             // draw scale
             if (scale) {
@@ -150,16 +152,16 @@ const Online2DDrawer = () => {
 
                 // 开始绘制线段
                 main_ctx.beginPath();
-                main_ctx.moveTo(scale.startPoint.x, scale.startPoint.y); // 设置线段起点
-                main_ctx.lineTo(scale.endPoint.x, scale.endPoint.y); // 设置线段终点
+                main_ctx.moveTo(scale.startPoint.X, scale.startPoint.Y); // 设置线段起点
+                main_ctx.lineTo(scale.endPoint.X, scale.endPoint.Y); // 设置线段终点
                 main_ctx.stroke();
 
                 // Draw vertex coordinates
                 main_ctx.fillStyle = 'blue';
                 main_ctx.font = '16px Arial';
                 main_ctx.fillText(scale.distanceInRealWorld + " m",
-                    Math.round(scale.startPoint.x + scale.endPoint.x) / 2 - 15,
-                    Math.round(scale.startPoint.y + scale.endPoint.y) / 2 - 10);
+                    Math.round(scale.startPoint.X + scale.endPoint.X) / 2 - 15,
+                    Math.round(scale.startPoint.Y + scale.endPoint.Y) / 2 - 10);
             }
 
 
@@ -169,7 +171,7 @@ const Online2DDrawer = () => {
                     case userOperations.drawCorridor:
                         main_ctx.strokeStyle = 'red';
                         main_ctx.lineWidth = 2;
-                        main_ctx.strokeRect(startPoint.x, startPoint.y, endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+                        main_ctx.strokeRect(startPoint.X, startPoint.Y, endPoint.X - startPoint.X, endPoint.Y - startPoint.Y);
                         break;
                     case userOperations.addScale:
                         main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
@@ -177,8 +179,8 @@ const Online2DDrawer = () => {
 
                         // 开始绘制线段
                         main_ctx.beginPath();
-                        main_ctx.moveTo(startPoint.x, startPoint.y); // 设置线段起点
-                        main_ctx.lineTo(endPoint.x, endPoint.y); // 设置线段终点
+                        main_ctx.moveTo(startPoint.X, startPoint.Y); // 设置线段起点
+                        main_ctx.lineTo(endPoint.X, endPoint.Y); // 设置线段终点
                         main_ctx.stroke(); // 绘制线段
 
                         break;
@@ -193,17 +195,20 @@ const Online2DDrawer = () => {
     }, [rectangles, POIs, scale, drawing, startPoint, endPoint, userOperation]);
 
     // Function to handle image upload
-    const handleImageUpload = (event) => {
+    const handleImageUpload = (event: any) => {
         const file = event.target.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-            setBackgroundImage(e.target.result);
+            if (e.target) {
+                setBackgroundImage(e.target.result);
+            }
         };
         reader.readAsDataURL(file);
     };
 
+
     // Function to draw background image
-    const drawBackgroundImage = (imageUrl) => {
+    const drawBackgroundImage = (imageUrl: string) => {
         const bgCanvas = backgroundCanvasRef.current;
         const bg_ctx = bgCanvas.getContext('2d');
 
@@ -230,7 +235,7 @@ const Online2DDrawer = () => {
 
 
     // Function to handle canvas click event
-    const handleCanvasClick = (event) => {
+    const handleCanvasClick = (event: { clientX: number; clientY: number; }) => {
         const rect = mainCanvasRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
@@ -239,19 +244,19 @@ const Online2DDrawer = () => {
             case userOperations.drawCorridor:
                 if (!drawing) {
                     // set start point and allow preview
-                    setStartPoint({x, y});
+                    setStartPoint({X: x, Y: y});
                     setDrawing(true);
                 } else {
-                    const width = Math.abs(endPoint.x - startPoint.x); // Calculate rectangle width
-                    const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
-                    const newX = Math.min(startPoint.x, endPoint.x);
-                    const newY = Math.min(startPoint.y, endPoint.y);
-                    addRectangle({x: newX, y: newY, width, height})
+                    const width = Math.abs(endPoint.X - startPoint.X); // Calculate rectangle width
+                    const height = Math.abs(endPoint.Y - startPoint.Y); // Calculate rectangle height
+                    const newX = Math.min(startPoint.X, endPoint.X);
+                    const newY = Math.min(startPoint.Y, endPoint.Y);
+                    addRectangle({X: newX, Y: newY, width, height})
                     setDrawing(false);
                 }
                 break;
             case userOperations.drawPOI:
-                previewPOI({X: endPoint.x, Y: endPoint.y, uuid: generateUUID(), name: '!!!'})
+                previewPOI({X: endPoint.X, Y: endPoint.Y, uuid: generateUUID(), name: '!!!'})
 
                 setTimeout(() => {
                     const poiName = window.prompt('Please enter the name of the POI:'); // 弹出对话框让用户输入 POI 名称
@@ -263,13 +268,13 @@ const Online2DDrawer = () => {
                         window.alert('POI name cannot be empty. Please enter a valid name.'); // 提示用户输入不能为空
                         return; // 直接返回，不执行后续代码
                     }
-                    addPOI({X: endPoint.x, Y: endPoint.y, uuid: generateUUID(), name: poiName}); // 添加 POI
+                    addPOI({X: endPoint.X, Y: endPoint.Y, uuid: generateUUID(), name: poiName}); // 添加 POI
                 }, 100); // 设置延迟 100 毫秒
                 break;
             case userOperations.addScale:
                 if (!drawing) {
                     // set start point and allow preview
-                    setStartPoint({x, y});
+                    setStartPoint({X: x, Y: y});
                     setDrawing(true);
                 } else {
                     setTimeout(() => {
@@ -284,7 +289,7 @@ const Online2DDrawer = () => {
                         addScale({
                             startPoint: startPoint,
                             endPoint: endPoint,
-                            distanceInRealWorld: distanceInRealWorld
+                            distanceInRealWorld: parseFloat(distanceInRealWorld)
                         });
                         setDrawing(false);
                     }, 100); // 设置延迟 100 毫秒
@@ -300,15 +305,15 @@ const Online2DDrawer = () => {
     }
 
     // Function to handle canvas mouse move event
-    const handleCanvasMouseMove = (event) => {
+    const handleCanvasMouseMove = (event: { clientX: number; clientY: number; }) => {
         const rect = mainCanvasRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        setEndPoint({x, y});
+        setEndPoint({X: x, Y: y});
     };
 
     // Function to handle key press event
-    const handleKeyPress = (event) => {
+    const handleKeyPress = (event: { key: string; shiftKey: any; metaKey: any; }) => {
         if (event.key === 'Escape') {
             console.log("ESC input");
             setDrawing(false);
@@ -332,7 +337,7 @@ const Online2DDrawer = () => {
     };
 
     // Function to handle shape type change
-    const handleShapeTypeChange = (event) => {
+    const handleShapeTypeChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
         setDrawing(false);
         setUserOperation(event.target.value);
     };

@@ -1,28 +1,40 @@
 import React, {useEffect, useRef, useState} from "react";
 import ClipperLib from "clipper-lib";
 import ExtrudedPolygonExporter from "./ExtrudedPolygonExporter";
+import {POI, Point, Rect, Scale} from "./types";
 
-const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, scale}: any) => {
-    const canvasRef = useRef(null);
-    const [walkableArea, setWalkableArea] = useState<[[{ X: number, Y: number }]]>();
-    const [ratio, setRatio] = useState(null);
+
+interface ThumbnailCanvasProps {
+    mainCanvasWidth: number;
+    mainCanvasHeight: number;
+    rectangles: Rect[] | undefined;
+    POIs: POI[] | undefined;
+    scale: Scale | undefined;
+}
+
+
+const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
+    const canvasRef = useRef<any>(null);
+    const [walkableArea, setWalkableArea] = useState<[[{ X: number, Y: number }]] | undefined>();
+    const [ratio, setRatio] = useState<number>(1);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        const scale_x = canvas.width / mainCanvasWidth;
-        const scale_y = canvas.height / mainCanvasHeight;
+        const scale_x = canvas.width / props.mainCanvasWidth;
+        const scale_y = canvas.height / props.mainCanvasHeight;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const clipper = new ClipperLib.Clipper();
 
         // convert rectangles to path
-        rectangles.forEach((rect, index) => {
+        if (!props.rectangles) return;
+        props.rectangles.forEach((rect: Rect) => {
             const rectPath = [
-                {X: rect.x, Y: rect.y},
-                {X: rect.x + rect.width, Y: rect.y},
-                {X: rect.x + rect.width, Y: rect.y + rect.height},
-                {X: rect.x, Y: rect.y + rect.height}
+                {X: rect.X, Y: rect.Y},
+                {X: rect.X + rect.width, Y: rect.Y},
+                {X: rect.X + rect.width, Y: rect.Y + rect.height},
+                {X: rect.X, Y: rect.Y + rect.height}
             ];
             clipper.AddPath(rectPath, ClipperLib.PolyType.ptClip, true);
         });
@@ -30,13 +42,15 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
         const walkableArea = new ClipperLib.Paths();
         clipper.Execute(ClipperLib.ClipType.ctUnion, walkableArea, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
 
-        if (!walkableArea.length > 0) return
+        if (!walkableArea) return
 
         const drawPOIs = () => {
             ctx.fillStyle = 'orange';
             const radius = 5;
 
-            POIs.forEach((POI, index) => {
+            if (!props.POIs) return;
+
+            props.POIs.forEach((POI: { X: number; Y: number; }) => {
                 ctx.beginPath();
                 ctx.arc(POI.X * scale_x, POI.Y * scale_y, radius, 0, 2 * Math.PI);
                 ctx.closePath();
@@ -63,18 +77,18 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
         };
 
         const drawScale = () => {
-            function calculateDistance(pointA, pointB) {
-                const dx = pointB.x - pointA.x;
-                const dy = pointB.y - pointA.y;
+            function calculateDistance(pointA: Point, pointB: Point) {
+                const dx = pointB.X - pointA.X;
+                const dy = pointB.Y - pointA.Y;
                 return Math.sqrt(dx * dx + dy * dy);
             }
 
             ctx.fillStyle = 'black';
             ctx.font = '13px Arial';
-            if (scale) {
+            if (props.scale) {
                 // ratio of a distance on the canvas (pixel) to the corresponding distance on the ground (meter).
-                const pixel = calculateDistance(scale.startPoint, scale.endPoint);
-                const cm = scale.distanceInRealWorld;
+                const pixel = calculateDistance(props.scale.startPoint, props.scale.endPoint);
+                const cm = props.scale.distanceInRealWorld;
                 const ratio = cm / pixel;
                 setRatio(ratio);
                 ctx.fillText('Scale (in meter/pixel): ' + ratio.toFixed(3), 5, 20);
@@ -93,7 +107,7 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
         drawScale();
 
         setWalkableArea(walkableArea);
-    }, [mainCanvasWidth, mainCanvasHeight, rectangles, POIs, scale]);
+    }, [props.mainCanvasWidth, props.mainCanvasHeight, props.rectangles, props.POIs, props.scale]);
 
     const getRandomColor = () => {
         const letters = "0123456789ABCDEF";
@@ -104,13 +118,13 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
         return color;
     };
 
-    function deepCopy(obj) {
+    function deepCopy<T>(obj: T): T {
         if (typeof obj !== 'object' || obj === null) {
             // 如果是基本数据类型或 null，则直接返回
             return obj;
         }
 
-        let newObj = Array.isArray(obj) ? [] : {}; // 根据原始类型创建新对象或数组
+        let newObj: any = Array.isArray(obj) ? [] : {}; // 根据原始类型创建新对象或数组
 
         // 递归地深拷贝每个属性值
         for (let key in obj) {
@@ -129,8 +143,8 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
 
         if (walkableArea) {
             const copy = deepCopy(walkableArea);
-            copy.forEach(sublist => {
-                sublist.forEach(point => {
+            copy.forEach((sublist: { X: number; Y: number; }[]) => {
+                sublist.forEach((point: { X: number; Y: number; }) => {
                     point.X *= ratio;
                     point.Y *= ratio;
                 });
@@ -152,9 +166,9 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
             return
         }
 
-        if (POIs) {
-            const copy = deepCopy(POIs)
-            copy.forEach(item => {
+        if (props.POIs) {
+            const copy = deepCopy(props.POIs)
+            copy.forEach((item: { X: number; Y: number; }) => {
                 item.X *= ratio;
                 item.Y *= ratio;
             });
@@ -173,7 +187,7 @@ const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, s
     const exportSolutionAsPNG = () => {
         const canvas = canvasRef.current;
         const link = document.createElement('a');
-        canvas.toBlob((blob) => {
+        canvas.toBlob((blob: Blob | MediaSource) => {
             link.download = 'whole-view.png';
             link.href = URL.createObjectURL(blob);
             link.click();
