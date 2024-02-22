@@ -84,28 +84,6 @@ const Online2DDrawer = () => {
     };
 
 
-    // Effect to draw background image when it changes
-    useEffect(() => {
-        const bgCanvas = backgroundCanvasRef.current;
-        const bg_ctx = bgCanvas.getContext('2d');
-
-        const drawCanvas = () => {
-            bg_ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-            // Draw background image
-            if (backgroundImage) {
-                console.log("draw backgroundImage");
-                const image = new Image();
-                image.onload = () => {
-                    bg_ctx.drawImage(image, 0, 0, bgCanvas.width - 5, bgCanvas.height - 5);
-                };
-                image.src = backgroundImage;
-            }
-        };
-
-        drawCanvas();
-
-    }, [backgroundImage])
-
     // Effect to draw shapes on the main canvas
     useEffect(() => {
         const mainCanvas = mainCanvasRef.current;
@@ -139,7 +117,7 @@ const Online2DDrawer = () => {
 
                 // Draw vertex coordinates
                 main_ctx.font = '16px Arial';
-                main_ctx.fillText("."+POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
+                main_ctx.fillText("." + POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
             });
 
             // for preview purpose: drawing temporary shape (from start point to current mouse position)
@@ -158,7 +136,7 @@ const Online2DDrawer = () => {
         };
 
         drawCanvas();
-    }, [rectangles, POIs, drawing, startPoint, endPoint, userOperation, canvasWidth, canvasHeight]);
+    }, [rectangles, POIs, drawing, startPoint, endPoint, userOperation]);
 
     // Function to handle image upload
     const handleImageUpload = (event) => {
@@ -170,20 +148,31 @@ const Online2DDrawer = () => {
         reader.readAsDataURL(file);
     };
 
-    // Effect to draw initial background image
-    useEffect(() => {
+    // Function to draw background image
+    const drawBackgroundImage = (imageUrl) => {
         const bgCanvas = backgroundCanvasRef.current;
         const bg_ctx = bgCanvas.getContext('2d');
 
-        bg_ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-        // Draw background image
-        console.log("init");
         const image = new Image();
+
         image.onload = () => {
+            bg_ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
             bg_ctx.drawImage(image, 0, 0, bgCanvas.width, bgCanvas.height);
+
+            setCanvasHeight(image.height / image.width * canvasWidth)
         };
-        image.src = process.env.PUBLIC_URL + "/rescaledFloorMap.jpg";
-    }, []);
+        image.src = imageUrl;
+
+    };
+
+    // Effect to draw background image when it changes
+    useEffect(() => {
+        if (backgroundImage) {
+            drawBackgroundImage(backgroundImage);
+        } else {
+            drawBackgroundImage(process.env.PUBLIC_URL + "/rescaledFloorMap.jpg");
+        }
+    }, [backgroundImage, canvasHeight]);
 
 
     // Function to handle canvas click event
