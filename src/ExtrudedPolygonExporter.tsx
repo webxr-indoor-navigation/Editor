@@ -1,12 +1,17 @@
 import React, {useState} from 'react';
 import {Vector2, Shape, ExtrudeGeometry, MeshBasicMaterial, Mesh} from 'three';
-import {OBJExporter} from 'three/addons/exporters/OBJExporter.js';
+import {OBJExporter} from "three/examples/jsm/exporters/OBJExporter";
 
-const ExtrudedPolygonExporter = ({jsonData}) => {
+
+interface ExtrudedPolygonExporterParams {
+    jsonData: [[{ X: number, Y: number }]];
+}
+
+const ExtrudedPolygonExporter = (props: ExtrudedPolygonExporterParams) => {
     // todo: currently, it is limited to output only one obj file...
     const exportOBJ = () => {
-        if (jsonData==null) return;
-        const vertices = jsonData[0].map(point => new Vector2(point.X, point.Y));
+        if (props.jsonData == null) return;
+        const vertices = props.jsonData[0].map(point => new Vector2(point.X, point.Y));
         console.log(vertices);
 
         const starShape = new Shape(vertices);

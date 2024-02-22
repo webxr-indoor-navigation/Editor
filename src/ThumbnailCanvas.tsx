@@ -2,9 +2,9 @@ import React, {useEffect, useRef, useState} from "react";
 import ClipperLib from "clipper-lib";
 import ExtrudedPolygonExporter from "./ExtrudedPolygonExporter";
 
-const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, scale}) => {
+const ThumbnailCanvas = ({mainCanvasWidth, mainCanvasHeight, rectangles, POIs, scale}: any) => {
     const canvasRef = useRef(null);
-    const [walkableArea, setWalkableArea] = useState(null);
+    const [walkableArea, setWalkableArea] = useState<[[{ X: number, Y: number }]]>();
     const [ratio, setRatio] = useState(null);
 
     useEffect(() => {
