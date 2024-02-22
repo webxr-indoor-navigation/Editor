@@ -2,6 +2,13 @@ import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
 import {v4 as uuid} from 'uuid';
 
+const userOperations = {
+    drawCorridor: "drawCorridor",
+    drawPOI: "drawPOI",
+    addScale: "addScale"
+};
+
+
 // todo: rescale the input background image
 const generateUUID = () => {
     return uuid();
@@ -12,8 +19,9 @@ const Online2DDrawer = () => {
     const [backgroundImage, setBackgroundImage] = useState(null);
     const [rectangles, setRectangles] = useState([]);
     const [POIs, setPOIs] = useState([]);
+    const [scale, setScale] = useState(null);
     const [drawing, setDrawing] = useState(false); // Whether drawing rectangle or circle
-    const [userOperation, setUserOperation] = useState('drawCorridor'); // Type of shape to draw
+    const [userOperation, setUserOperation] = useState(userOperations.drawCorridor); // Type of shape to draw
     const [startPoint, setStartPoint] = useState({x: 0, y: 0}); // Starting point coordinates
     const [endPoint, setEndPoint] = useState({x: 0, y: 0}); // Diagonal point coordinates
     const [canvasWidth, setCanvasWidth] = useState(800); // Canvas width
@@ -26,13 +34,20 @@ const Online2DDrawer = () => {
     const backgroundCanvasRef = useRef(null); // Ref for background image canvas
 
     // 添加一个新的矩形到画布上，并记录操作历史
+
+
+    const addScale = (newScale) => {
+        setScale(newScale);
+        setHistory(prevHistory => [...prevHistory, {'type': userOperations.addScale, 'args': newScale}]); // 记录操作历史
+    };
+
     const addRectangle = (newRectangle) => {
         setRectangles(prevRectangles => [...prevRectangles, newRectangle]);
-        setHistory(prevHistory => [...prevHistory, {'type': 'addRectangle', 'args': newRectangle}]); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {'type': userOperations.drawCorridor, 'args': newRectangle}]); // 记录操作历史
     };
     const addPOI = (newPOI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
-        setHistory(prevHistory => [...prevHistory, {'type': 'addPOI', 'args': newPOI}]); // 记录操作历史
+        setHistory(prevHistory => [...prevHistory, {'type': userOperations.drawPOI, 'args': newPOI}]); // 记录操作历史
     };
     const previewPOI = (newPOI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
@@ -47,11 +62,14 @@ const Online2DDrawer = () => {
             const lastOperationType = lastOperation['type'];
 
             switch (lastOperationType) {
-                case 'addRectangle':
+                case userOperations.drawCorridor:
                     setRectangles(prevRectangles => prevRectangles.slice(0, -1)); // 移除最后一个矩形
                     break;
-                case 'addPOI':
-                    setPOIs(prevPOIs => prevPOIs.slice(0, -1)); // 移除最后一个矩形
+                case userOperations.drawPOI:
+                    setPOIs(prevPOIs => prevPOIs.slice(0, -1));
+                    break;
+                case userOperations.addScale:
+                    setScale(1)
                     break;
                 default:
                     break;
@@ -70,11 +88,14 @@ const Online2DDrawer = () => {
             const lastUndoOperationType = lastUndoOperation['type'];
             const args = redoHistory[redoHistory.length - 1]['args'];
             switch (lastUndoOperationType) {
-                case 'addRectangle':
+                case userOperations.drawCorridor:
                     addRectangle(args);
                     break;
-                case 'addPOI':
+                case userOperations.drawPOI:
                     addPOI(args);
+                    break;
+                case userOperations.addScale:
+                    addScale(args);
                     break;
                 default:
                     break;
@@ -91,7 +112,8 @@ const Online2DDrawer = () => {
 
         const drawCanvas = () => {
             main_ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            // If there is no background image, only draw shapes
+
+            // draw rectangles
             main_ctx.strokeStyle = 'red';
             main_ctx.lineWidth = 2;
 
@@ -106,27 +128,59 @@ const Online2DDrawer = () => {
                 main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x) - 30, Math.round(rect.y + rect.height) + 15);
             });
 
+            // draw POIs
             main_ctx.strokeStyle = 'orange';
             main_ctx.lineWidth = 2;
             POIs.forEach((POI, index) => {
                 main_ctx.beginPath();
                 const radius = 10;
-                main_ctx.arc(POI.x, POI.y, radius, 0, 2 * Math.PI);
+                main_ctx.arc(POI.X, POI.Y, radius, 0, 2 * Math.PI);
                 main_ctx.stroke();
                 main_ctx.closePath();
 
                 // Draw vertex coordinates
                 main_ctx.font = '16px Arial';
-                main_ctx.fillText("." + POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
+                main_ctx.fillText("." + POI.name, Math.round(POI.X) - 15, Math.round(POI.Y) - 15);
             });
+
+            // draw scale
+            if (scale) {
+                main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
+                main_ctx.lineWidth = 5; // 设置线段宽度为 2 像素
+
+                // 开始绘制线段
+                main_ctx.beginPath();
+                main_ctx.moveTo(scale.startPoint.x, scale.startPoint.y); // 设置线段起点
+                main_ctx.lineTo(scale.endPoint.x, scale.endPoint.y); // 设置线段终点
+                main_ctx.stroke();
+
+                // Draw vertex coordinates
+                main_ctx.fillStyle = 'blue';
+                main_ctx.font = '16px Arial';
+                main_ctx.fillText(scale.distanceInRealWorld + " m",
+                    Math.round(scale.startPoint.x + scale.endPoint.x) / 2 - 15,
+                    Math.round(scale.startPoint.y + scale.endPoint.y) / 2 - 10);
+            }
+
 
             // for preview purpose: drawing temporary shape (from start point to current mouse position)
             if (drawing) {
                 switch (userOperation) {
-                    case 'drawCorridor':
+                    case userOperations.drawCorridor:
                         main_ctx.strokeStyle = 'red';
                         main_ctx.lineWidth = 2;
                         main_ctx.strokeRect(startPoint.x, startPoint.y, endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+                        break;
+                    case userOperations.addScale:
+                        main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
+                        main_ctx.lineWidth = 5; // 设置线段宽度为 2 像素
+
+                        // 开始绘制线段
+                        main_ctx.beginPath();
+                        main_ctx.moveTo(startPoint.x, startPoint.y); // 设置线段起点
+                        main_ctx.lineTo(endPoint.x, endPoint.y); // 设置线段终点
+                        main_ctx.stroke(); // 绘制线段
+
                         break;
                     default:
                         console.log("unknown user operation");
@@ -136,7 +190,7 @@ const Online2DDrawer = () => {
         };
 
         drawCanvas();
-    }, [rectangles, POIs, drawing, startPoint, endPoint, userOperation]);
+    }, [rectangles, POIs, scale, drawing, startPoint, endPoint, userOperation]);
 
     // Function to handle image upload
     const handleImageUpload = (event) => {
@@ -182,7 +236,7 @@ const Online2DDrawer = () => {
         const y = event.clientY - rect.top;
 
         switch (userOperation) {
-            case 'drawCorridor':
+            case userOperations.drawCorridor:
                 if (!drawing) {
                     // set start point and allow preview
                     setStartPoint({x, y});
@@ -196,8 +250,8 @@ const Online2DDrawer = () => {
                     setDrawing(false);
                 }
                 break;
-            case 'drawPOI':
-                previewPOI({x: endPoint.x, y: endPoint.y, uuid: generateUUID(), name: '!!!'})
+            case userOperations.drawPOI:
+                previewPOI({X: endPoint.x, Y: endPoint.y, uuid: generateUUID(), name: '!!!'})
 
                 setTimeout(() => {
                     const poiName = window.prompt('Please enter the name of the POI:'); // 弹出对话框让用户输入 POI 名称
@@ -209,9 +263,36 @@ const Online2DDrawer = () => {
                         window.alert('POI name cannot be empty. Please enter a valid name.'); // 提示用户输入不能为空
                         return; // 直接返回，不执行后续代码
                     }
-                    addPOI({x: endPoint.x, y: endPoint.y, uuid: generateUUID(), name: poiName}); // 添加 POI
+                    addPOI({X: endPoint.x, Y: endPoint.y, uuid: generateUUID(), name: poiName}); // 添加 POI
                 }, 100); // 设置延迟 100 毫秒
                 break;
+            case userOperations.addScale:
+                if (!drawing) {
+                    // set start point and allow preview
+                    setStartPoint({x, y});
+                    setDrawing(true);
+                } else {
+                    setTimeout(() => {
+                        const distanceInRealWorld = window.prompt('Please enter the distance (in meters) in real world :'); // 弹出对话框让用户输入 POI 名称
+                        if (distanceInRealWorld === null) { // 用户点击了取消按钮
+                            return; // 直接返回，不执行后续代码
+                        }
+                        if (distanceInRealWorld.trim() === '') { // 用户输入为空
+                            window.alert('Length cannot be empty. Please enter a valid length.'); // 提示用户输入不能为空
+                            return; // 直接返回，不执行后续代码
+                        }
+                        addScale({
+                            startPoint: startPoint,
+                            endPoint: endPoint,
+                            distanceInRealWorld: distanceInRealWorld
+                        });
+                        setDrawing(false);
+                    }, 100); // 设置延迟 100 毫秒
+
+
+                }
+                break;
+
             default:
                 console.log("unknown user operation");
                 break;
@@ -287,13 +368,14 @@ const Online2DDrawer = () => {
                     ></canvas>
                 </div>
                 <ThumbnailCanvas mainCanvasWidth={canvasWidth} mainCanvasHeight={canvasHeight} rectangles={rectangles}
-                                 POIs={POIs}/>
+                                 POIs={POIs} scale={scale}/>
             </div>
             <div>
                 <label htmlFor="shapeType">User Operation:</label>
                 <select id="shapeType" value={userOperation} onChange={handleShapeTypeChange}>
-                    <option value="drawCorridor">draw corridor (walkable area)</option>
-                    <option value="drawPOI">add POI (destination)</option>
+                    <option value={userOperations.drawCorridor}>draw corridor (walkable area)</option>
+                    <option value={userOperations.drawPOI}>add POI (destination)</option>
+                    <option value={userOperations.addScale}>add scale</option>
                 </select>
             </div>
         </div>
