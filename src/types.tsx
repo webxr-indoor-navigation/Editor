@@ -3,6 +3,7 @@ export interface POI {
     Y: number;
     uuid: string;
     name: string;
+    facing: Point;
 }
 
 export interface Point{
