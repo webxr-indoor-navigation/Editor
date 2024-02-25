@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
-import { v4 as uuid } from 'uuid';
+import {v4 as uuid} from 'uuid';
 import {History, POI, Point, Rect, Scale} from "./types";
 
 const userOperations = {
@@ -12,6 +12,24 @@ const userOperations = {
 const generateUUID = () => {
     return uuid();
 };
+
+const POI_radius =10;
+
+function facingAdjust(P1: Point, P2: Point) {
+    // 计算线段长度
+    const distance = Math.sqrt(Math.pow(P2.X - P1.X, 2) + Math.pow(P2.Y - P1.Y, 2));
+
+    // 计算单位向量
+    const unitVectorX = (P2.X - P1.X) / distance;
+    const unitVectorY = (P2.Y - P1.Y) / distance;
+
+    // 计算新点的坐标
+    const newX = P1.X + POI_radius * unitVectorX;
+    const newY = P1.Y + POI_radius * unitVectorY;
+
+    return { X: newX, Y: newY };
+}
+
 
 const Online2DDrawer = () => {
     // State variables initialization
@@ -51,7 +69,6 @@ const Online2DDrawer = () => {
     const previewPOI = (newPOI: POI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
     };
-
     // 撤销最后一个操作
     const undo = () => {
         if (history) {
@@ -135,14 +152,19 @@ const Online2DDrawer = () => {
             if (POIs)
                 POIs.forEach(POI => {
                     main_ctx.beginPath();
-                    const radius = 10;
-                    main_ctx.arc(POI.X, POI.Y, radius, 0, 2 * Math.PI);
+                    main_ctx.arc(POI.X, POI.Y, POI_radius, 0, 2 * Math.PI);
                     main_ctx.stroke();
                     main_ctx.closePath();
 
-                    // Draw vertex coordinates
+                    // Draw POI name
                     main_ctx.font = '16px Arial';
                     main_ctx.fillText("." + POI.name, Math.round(POI.X) - 15, Math.round(POI.Y) - 15);
+
+                    // Draw facing direction
+                    main_ctx.beginPath();
+                    main_ctx.moveTo(POI.X, POI.Y);
+                    main_ctx.lineTo(POI.facing.X, POI.facing.Y);
+                    main_ctx.stroke();
                 });
 
             // draw scale
@@ -183,6 +205,21 @@ const Online2DDrawer = () => {
                         main_ctx.lineTo(endPoint.X, endPoint.Y); // 设置线段终点
                         main_ctx.stroke(); // 绘制线段
 
+                        break;
+
+                    case userOperations.drawPOI:
+                        main_ctx.beginPath();
+                        main_ctx.arc(startPoint.X, startPoint.Y, POI_radius, 0, 2 * Math.PI);
+                        main_ctx.stroke();
+                        main_ctx.closePath();
+
+                        // Draw facing direction
+                        const end = facingAdjust(startPoint, endPoint);
+
+                        main_ctx.beginPath();
+                        main_ctx.moveTo(startPoint.X, startPoint.Y);
+                        main_ctx.lineTo(end.X, end.Y);
+                        main_ctx.stroke();
                         break;
                     default:
                         console.log("unknown user operation");
@@ -256,21 +293,36 @@ const Online2DDrawer = () => {
                 }
                 break;
             case userOperations.drawPOI:
-                previewPOI({X: endPoint.X, Y: endPoint.Y, uuid: generateUUID(), name: '!!!'})
+                if (!drawing) {
+                    // set start point and allow preview
+                    setStartPoint({X: x, Y: y});
+                    setDrawing(true);
+                } else {
+                    setDrawing(false);
 
-                setTimeout(() => {
-                    const poiName = window.prompt('Please enter the name of the POI:'); // 弹出对话框让用户输入 POI 名称
-                    setPOIs(prevPOIs => prevPOIs.slice(0, -1)); // 移除最后一个矩形
-                    if (poiName === null) { // 用户点击了取消按钮
-                        return; // 直接返回，不执行后续代码
-                    }
-                    if (poiName.trim() === '') { // 用户输入为空
-                        window.alert('POI name cannot be empty. Please enter a valid name.'); // 提示用户输入不能为空
-                        return; // 直接返回，不执行后续代码
-                    }
-                    addPOI({X: endPoint.X, Y: endPoint.Y, uuid: generateUUID(), name: poiName}); // 添加 POI
-                }, 100); // 设置延迟 100 毫秒
+                    previewPOI({X: startPoint.X, Y: startPoint.Y, uuid: generateUUID(), name: '!!!', facing: facingAdjust(startPoint, endPoint)})
+                    setTimeout(() => {
+                        const poiName = window.prompt('Please enter the name of the POI:'); // 弹出对话框让用户输入 POI 名称
+                        setPOIs(prevPOIs => prevPOIs.slice(0, -1)); // 移除最后一个矩形
+                        if (poiName === null) { // 用户点击了取消按钮
+                            return; // 直接返回，不执行后续代码
+                        }
+                        if (poiName.trim() === '') { // 用户输入为空
+                            window.alert('POI name cannot be empty. Please enter a valid name.'); // 提示用户输入不能为空
+                            return; // 直接返回，不执行后续代码
+                        }
+                        addPOI({
+                            X: startPoint.X,
+                            Y: startPoint.Y,
+                            uuid: generateUUID(),
+                            name: poiName,
+                            facing: facingAdjust(startPoint, endPoint)
+                        }); // 添加 POI
+                    }, 100); // 设置延迟 100 毫秒
+                }
+
                 break;
+
             case userOperations.addScale:
                 if (!drawing) {
                     // set start point and allow preview

@@ -168,9 +168,11 @@ const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
 
         if (props.POIs) {
             const copy = deepCopy(props.POIs)
-            copy.forEach((item: { X: number; Y: number; }) => {
+            copy.forEach((item: POI) => {
                 item.X *= ratio;
                 item.Y *= ratio;
+                item.facing.X *= ratio;
+                item.facing.Y *= ratio;
             });
             const json = JSON.stringify(copy)
             const blob = new Blob([json], {type: 'application/json'});
