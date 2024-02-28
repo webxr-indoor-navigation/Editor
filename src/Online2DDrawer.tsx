@@ -27,7 +27,7 @@ function facingAdjust(P1: Point, P2: Point) {
     const newX = P1.X + POI_radius * unitVectorX;
     const newY = P1.Y + POI_radius * unitVectorY;
 
-    return { X: newX, Y: newY };
+    return {X: newX, Y: newY};
 }
 
 
@@ -208,6 +208,9 @@ const Online2DDrawer = () => {
                         break;
 
                     case userOperations.drawPOI:
+                        // draw POIs
+                        main_ctx.strokeStyle = 'orange';
+                        main_ctx.lineWidth = 2;
                         main_ctx.beginPath();
                         main_ctx.arc(startPoint.X, startPoint.Y, POI_radius, 0, 2 * Math.PI);
                         main_ctx.stroke();
@@ -300,7 +303,13 @@ const Online2DDrawer = () => {
                 } else {
                     setDrawing(false);
 
-                    previewPOI({X: startPoint.X, Y: startPoint.Y, uuid: generateUUID(), name: '!!!', facing: facingAdjust(startPoint, endPoint)})
+                    previewPOI({
+                        X: startPoint.X,
+                        Y: startPoint.Y,
+                        uuid: generateUUID(),
+                        name: '!!!',
+                        facing: facingAdjust(startPoint, endPoint)
+                    })
                     setTimeout(() => {
                         const poiName = window.prompt('Please enter the name of the POI:'); // 弹出对话框让用户输入 POI 名称
                         setPOIs(prevPOIs => prevPOIs.slice(0, -1)); // 移除最后一个矩形
