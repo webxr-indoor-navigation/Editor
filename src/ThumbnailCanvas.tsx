@@ -31,10 +31,10 @@ const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
         if (!props.rectangles) return;
         props.rectangles.forEach((rect: Rect) => {
             const rectPath = [
-                {X: rect.X, Y: rect.Y},
-                {X: rect.X + rect.width, Y: rect.Y},
-                {X: rect.X + rect.width, Y: rect.Y + rect.height},
-                {X: rect.X, Y: rect.Y + rect.height}
+                {X: rect.x, Y: rect.y},
+                {X: rect.x + rect.width, Y: rect.y},
+                {X: rect.x + rect.width, Y: rect.y + rect.height},
+                {X: rect.x, Y: rect.y + rect.height}
             ];
             clipper.AddPath(rectPath, ClipperLib.PolyType.ptClip, true);
         });
@@ -50,9 +50,9 @@ const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
 
             if (!props.POIs) return;
 
-            props.POIs.forEach((POI: { X: number; Y: number; }) => {
+            props.POIs.forEach((POI: Point) => {
                 ctx.beginPath();
-                ctx.arc(POI.X * scale_x, POI.Y * scale_y, radius, 0, 2 * Math.PI);
+                ctx.arc(POI.x * scale_x, POI.y * scale_y, radius, 0, 2 * Math.PI);
                 ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
@@ -78,8 +78,8 @@ const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
 
         const drawScale = () => {
             function calculateDistance(pointA: Point, pointB: Point) {
-                const dx = pointB.X - pointA.X;
-                const dy = pointB.Y - pointA.Y;
+                const dx = pointB.x - pointA.x;
+                const dy = pointB.y - pointA.y;
                 return Math.sqrt(dx * dx + dy * dy);
             }
 
@@ -169,10 +169,10 @@ const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
         if (props.POIs) {
             const copy = deepCopy(props.POIs)
             copy.forEach((item: POI) => {
-                item.X *= ratio;
-                item.Y *= ratio;
-                item.facing.X *= ratio;
-                item.facing.Y *= ratio;
+                item.x *= ratio;
+                item.y *= ratio;
+                item.facing.x *= ratio;
+                item.facing.y *= ratio;
             });
             const json = JSON.stringify(copy)
             const blob = new Blob([json], {type: 'application/json'});

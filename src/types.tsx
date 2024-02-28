@@ -1,14 +1,14 @@
 export interface POI {
-    X: number;
-    Y: number;
+    x: number;
+    y: number;
     uuid: string;
     name: string;
     facing: Point;
 }
 
 export interface Point{
-    X: number;
-    Y: number;
+    x: number;
+    y: number;
 }
 
 export interface History {
@@ -18,8 +18,8 @@ export interface History {
 
 
 export interface Rect {
-    X: number;
-    Y: number;
+    x: number;
+    y: number;
     width: number;
     height: number;
 }

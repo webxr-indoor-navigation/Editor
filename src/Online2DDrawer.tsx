@@ -15,19 +15,19 @@ const generateUUID = () => {
 
 const POI_radius = 20;
 
-function facingAdjust(P1: Point, P2: Point) {
+function facingAdjust(P1: Point, P2: Point): Point {
     // 计算线段长度
-    const distance = Math.sqrt(Math.pow(P2.X - P1.X, 2) + Math.pow(P2.Y - P1.Y, 2));
+    const distance = Math.sqrt(Math.pow(P2.x - P1.x, 2) + Math.pow(P2.y - P1.y, 2));
 
     // 计算单位向量
-    const unitVectorX = (P2.X - P1.X) / distance;
-    const unitVectorY = (P2.Y - P1.Y) / distance;
+    const unitVectorX = (P2.x - P1.x) / distance;
+    const unitVectorY = (P2.y - P1.y) / distance;
 
     // 计算新点的坐标
-    const newX = P1.X + POI_radius * unitVectorX;
-    const newY = P1.Y + POI_radius * unitVectorY;
+    const newX = P1.x + POI_radius * unitVectorX;
+    const newY = P1.y + POI_radius * unitVectorY;
 
-    return {X: newX, Y: newY};
+    return {x: newX, y: newY};
 }
 
 
@@ -39,8 +39,8 @@ const Online2DDrawer = () => {
     const [scale, setScale] = useState<Scale>();
     const [drawing, setDrawing] = useState(false); // Whether drawing rectangle or circle
     const [userOperation, setUserOperation] = useState(userOperations.drawCorridor); // Type of shape to draw
-    const [startPoint, setStartPoint] = useState<Point>({X: 0, Y: 0}); // Starting point coordinates
-    const [endPoint, setEndPoint] = useState<Point>({X: 0, Y: 0}); // Diagonal point coordinates
+    const [startPoint, setStartPoint] = useState<Point>({x: 0, y: 0}); // Starting point coordinates
+    const [endPoint, setEndPoint] = useState<Point>({x: 0, y: 0}); // Diagonal point coordinates
     const [canvasWidth] = useState<number>(800); // Canvas width
     const [canvasHeight, setCanvasHeight] = useState<number>(600); // Canvas height
     const [history, setHistory] = useState<History[]>([]); // 用于存储操作历史记录的数组
@@ -135,14 +135,14 @@ const Online2DDrawer = () => {
 
             if (rectangles)
                 rectangles.forEach((rect: Rect) => {
-                    main_ctx.strokeRect(rect.X, rect.Y, rect.width, rect.height);
+                    main_ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
                     // Draw vertex coordinates
                     main_ctx.fillStyle = 'blue';
                     main_ctx.font = '16px Arial';
-                    main_ctx.fillText(`(${Math.round(rect.X)}, ${Math.round(rect.Y)})`, Math.round(rect.X) - 30, Math.round(rect.Y) - 10);
-                    main_ctx.fillText(`(${Math.round(rect.X + rect.width)}, ${Math.round(rect.Y)})`, Math.round(rect.X + rect.width), Math.round(rect.Y) - 10);
-                    main_ctx.fillText(`(${Math.round(rect.X + rect.width)}, ${Math.round(rect.Y + rect.height)})`, Math.round(rect.X + rect.width), Math.round(rect.Y + rect.height) + 15);
-                    main_ctx.fillText(`(${Math.round(rect.X)}, ${Math.round(rect.Y + rect.height)})`, Math.round(rect.X) - 30, Math.round(rect.Y + rect.height) + 15);
+                    main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y)})`, Math.round(rect.x) - 30, Math.round(rect.y) - 10);
+                    main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y)})`, Math.round(rect.x + rect.width), Math.round(rect.y) - 10);
+                    main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x + rect.width), Math.round(rect.y + rect.height) + 15);
+                    main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x) - 30, Math.round(rect.y + rect.height) + 15);
                 });
 
             // draw POIs
@@ -152,18 +152,18 @@ const Online2DDrawer = () => {
             if (POIs)
                 POIs.forEach(POI => {
                     main_ctx.beginPath();
-                    main_ctx.arc(POI.X, POI.Y, POI_radius, 0, 2 * Math.PI);
+                    main_ctx.arc(POI.x, POI.y, POI_radius, 0, 2 * Math.PI);
                     main_ctx.stroke();
                     main_ctx.closePath();
 
                     // Draw POI name
                     main_ctx.font = '16px Arial';
-                    main_ctx.fillText("." + POI.name, Math.round(POI.X) - 15, Math.round(POI.Y) - 15);
+                    main_ctx.fillText("." + POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
 
                     // Draw facing direction
                     main_ctx.beginPath();
-                    main_ctx.moveTo(POI.X, POI.Y);
-                    main_ctx.lineTo(POI.facing.X, POI.facing.Y);
+                    main_ctx.moveTo(POI.x, POI.y);
+                    main_ctx.lineTo(POI.facing.x, POI.facing.y);
                     main_ctx.stroke();
                 });
 
@@ -174,16 +174,16 @@ const Online2DDrawer = () => {
 
                 // 开始绘制线段
                 main_ctx.beginPath();
-                main_ctx.moveTo(scale.startPoint.X, scale.startPoint.Y); // 设置线段起点
-                main_ctx.lineTo(scale.endPoint.X, scale.endPoint.Y); // 设置线段终点
+                main_ctx.moveTo(scale.startPoint.x, scale.startPoint.y); // 设置线段起点
+                main_ctx.lineTo(scale.endPoint.x, scale.endPoint.y); // 设置线段终点
                 main_ctx.stroke();
 
                 // Draw vertex coordinates
                 main_ctx.fillStyle = 'blue';
                 main_ctx.font = '16px Arial';
                 main_ctx.fillText(scale.distanceInRealWorld + " m",
-                    Math.round(scale.startPoint.X + scale.endPoint.X) / 2 - 15,
-                    Math.round(scale.startPoint.Y + scale.endPoint.Y) / 2 - 10);
+                    Math.round(scale.startPoint.x + scale.endPoint.x) / 2 - 15,
+                    Math.round(scale.startPoint.y + scale.endPoint.y) / 2 - 10);
             }
 
 
@@ -193,7 +193,7 @@ const Online2DDrawer = () => {
                     case userOperations.drawCorridor:
                         main_ctx.strokeStyle = 'red';
                         main_ctx.lineWidth = 2;
-                        main_ctx.strokeRect(startPoint.X, startPoint.Y, endPoint.X - startPoint.X, endPoint.Y - startPoint.Y);
+                        main_ctx.strokeRect(startPoint.x, startPoint.y, endPoint.x - startPoint.x, endPoint.y - startPoint.y);
                         break;
                     case userOperations.addScale:
                         main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
@@ -201,8 +201,8 @@ const Online2DDrawer = () => {
 
                         // 开始绘制线段
                         main_ctx.beginPath();
-                        main_ctx.moveTo(startPoint.X, startPoint.Y); // 设置线段起点
-                        main_ctx.lineTo(endPoint.X, endPoint.Y); // 设置线段终点
+                        main_ctx.moveTo(startPoint.x, startPoint.y); // 设置线段起点
+                        main_ctx.lineTo(endPoint.x, endPoint.y); // 设置线段终点
                         main_ctx.stroke(); // 绘制线段
 
                         break;
@@ -212,7 +212,7 @@ const Online2DDrawer = () => {
                         main_ctx.strokeStyle = 'orange';
                         main_ctx.lineWidth = 2;
                         main_ctx.beginPath();
-                        main_ctx.arc(startPoint.X, startPoint.Y, POI_radius, 0, 2 * Math.PI);
+                        main_ctx.arc(startPoint.x, startPoint.y, POI_radius, 0, 2 * Math.PI);
                         main_ctx.stroke();
                         main_ctx.closePath();
 
@@ -220,8 +220,8 @@ const Online2DDrawer = () => {
                         const end = facingAdjust(startPoint, endPoint);
 
                         main_ctx.beginPath();
-                        main_ctx.moveTo(startPoint.X, startPoint.Y);
-                        main_ctx.lineTo(end.X, end.Y);
+                        main_ctx.moveTo(startPoint.x, startPoint.y);
+                        main_ctx.lineTo(end.x, end.y);
                         main_ctx.stroke();
                         break;
                     default:
@@ -284,28 +284,28 @@ const Online2DDrawer = () => {
             case userOperations.drawCorridor:
                 if (!drawing) {
                     // set start point and allow preview
-                    setStartPoint({X: x, Y: y});
+                    setStartPoint({x: x, y: y});
                     setDrawing(true);
                 } else {
-                    const width = Math.abs(endPoint.X - startPoint.X); // Calculate rectangle width
-                    const height = Math.abs(endPoint.Y - startPoint.Y); // Calculate rectangle height
-                    const newX = Math.min(startPoint.X, endPoint.X);
-                    const newY = Math.min(startPoint.Y, endPoint.Y);
-                    addRectangle({X: newX, Y: newY, width, height})
+                    const width = Math.abs(endPoint.x - startPoint.x); // Calculate rectangle width
+                    const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
+                    const newX = Math.min(startPoint.x, endPoint.x);
+                    const newY = Math.min(startPoint.y, endPoint.y);
+                    addRectangle({x: newX, y: newY, width, height})
                     setDrawing(false);
                 }
                 break;
             case userOperations.drawPOI:
                 if (!drawing) {
                     // set start point and allow preview
-                    setStartPoint({X: x, Y: y});
+                    setStartPoint({x: x, y: y});
                     setDrawing(true);
                 } else {
                     setDrawing(false);
 
                     previewPOI({
-                        X: startPoint.X,
-                        Y: startPoint.Y,
+                        x: startPoint.x,
+                        y: startPoint.y,
                         uuid: generateUUID(),
                         name: '!!!',
                         facing: facingAdjust(startPoint, endPoint)
@@ -321,8 +321,8 @@ const Online2DDrawer = () => {
                             return; // 直接返回，不执行后续代码
                         }
                         addPOI({
-                            X: startPoint.X,
-                            Y: startPoint.Y,
+                            x: startPoint.x,
+                            y: startPoint.y,
                             uuid: generateUUID(),
                             name: poiName,
                             facing: facingAdjust(startPoint, endPoint)
@@ -335,7 +335,7 @@ const Online2DDrawer = () => {
             case userOperations.addScale:
                 if (!drawing) {
                     // set start point and allow preview
-                    setStartPoint({X: x, Y: y});
+                    setStartPoint({x: x, y: y});
                     setDrawing(true);
                 } else {
                     setTimeout(() => {
@@ -370,7 +370,7 @@ const Online2DDrawer = () => {
         const rect = mainCanvasRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        setEndPoint({X: x, Y: y});
+        setEndPoint({x: x, y: y});
     };
 
     // Function to handle key press event
