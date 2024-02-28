@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import React from "react";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
+import ReadmeLoader from "./ReadmeLoader";
 
 function App() {
 
@@ -17,7 +18,7 @@ function App() {
 
     function Manual() {
         return (
-            <></>
+            <ReadmeLoader></ReadmeLoader>
         );
     }
 
@@ -39,7 +40,7 @@ function App() {
             <Tab eventKey="Editor" title="Editor">
                 <Editor></Editor>
             </Tab>
-            <Tab eventKey="Manual" title="Manual" disabled>
+            <Tab eventKey="Manual" title="Manual">
                 <Manual></Manual>
             </Tab>
             <Tab eventKey="About" title="About" disabled>

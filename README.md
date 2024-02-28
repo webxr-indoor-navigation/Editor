@@ -2,6 +2,13 @@
 
 Welcome to the Indoor Navigation Editor, a web-based tool designed to manually extract key information from floor maps for use with NavMesh way-finding algorithms.
 
+## Demo
+[Demo](https://webxr-indoor-navigation.github.io/Editor/)
+
+## Repo
+[GitHub](https://github.com/webxr-indoor-navigation/Editor)
+
+
 ## Step 1: Define Walkable Area
 
 To define the walkable areas on the map, follow these steps:
