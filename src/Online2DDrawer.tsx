@@ -13,7 +13,7 @@ const generateUUID = () => {
     return uuid();
 };
 
-const POI_radius = 100;
+const POI_radius = 20;
 
 function facingAdjust(P1: Point, P2: Point) {
     // 计算线段长度
