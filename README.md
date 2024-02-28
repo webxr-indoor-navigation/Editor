@@ -18,7 +18,7 @@ Please ensure that you maintain the width and height ratio of your floor map whe
 
 ## Step 1: Define Walkable Area
 
-![step1](mics/step1-draw-walkable-area-ezgif.com-video-to-gif-converter.gif)
+![step1](https://raw.githubusercontent.com/webxr-indoor-navigation/Editor/main/mics/step1-draw-walkable-area-ezgif.com-video-to-gif-converter.gif)
 
 To define the walkable areas on the map, follow these steps:
 1. Select "User Operation" > "Draw Corridor (Walkable Area)".
@@ -29,7 +29,7 @@ To define the walkable areas on the map, follow these steps:
 
 ## Step 2: Define Points of Interest (POIs)
 
-![step2](mics/step2-add-POIs-ezgif.com-video-to-gif-converter.gif)
+![step2](https://raw.githubusercontent.com/webxr-indoor-navigation/Editor/main/mics/step2-add-POIs-ezgif.com-video-to-gif-converter.gif)
 
 To define Points of Interest (POIs) on the map, follow these steps:
 1. Select "User Operation" > "Add POI (Destination)".
@@ -40,7 +40,7 @@ To define Points of Interest (POIs) on the map, follow these steps:
 
 ## Step 3: Define Scale
 
-![step3](mics/step3-add-scale-ezgif.com-video-to-gif-converter.gif)
+![step3](https://raw.githubusercontent.com/webxr-indoor-navigation/Editor/main/mics/step3-add-scale-ezgif.com-video-to-gif-converter.gif)
 
 
 To establish the scale of the map, follow these steps:
