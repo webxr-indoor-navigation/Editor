@@ -1,70 +1,36 @@
-# Getting Started with Create React App
+# Indoor Navigation Editor
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Welcome to the Indoor Navigation Editor, a web-based tool designed to manually extract key information from floor maps for use with NavMesh way-finding algorithms.
 
-## Available Scripts
+## Step 1: Define Walkable Area
 
-In the project directory, you can run:
+To define the walkable areas on the map, follow these steps:
+1. Select "User Operation" > "Draw Corridor (Walkable Area)".
+2. Currently, the tool supports defining rectangles by specifying their diagonals.
+3. You can overlap rectangles as needed. All rectangles will be combined to generate a single polygon representing the walkable area.
 
-### `npm start`
+## Step 2: Define Points of Interest (POIs)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+To define Points of Interest (POIs) on the map, follow these steps:
+1. Select "User Operation" > "Add POI (Destination)".
+2. Click on the map to define the location of the POI.
+3. Move the mouse to indicate the direction the POI faces.
+   - QR codes will be associated with the POIs, and this direction represents their orientation.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Step 3: Define Scale
 
-### `npm test`
+To establish the scale of the map, follow these steps:
+1. Select "User Operation" > "Add Scale".
+2. Click on the map to define the start and end points of a known distance in reality.
+3. Enter the real distance corresponding to the selected points.
+4. The scale ratio will be displayed in the right window, indicating the relationship between meters and pixels on the map.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Export
 
-### `npm run build`
+1. All exportation will be scaled in meter.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Shortcuts
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. Undo: `Metakey` + `Z`
+2. Redo: `Metakey` + `Shift` + `Z`
+3. Quit current user operation: `Esc`
