@@ -2,6 +2,7 @@ import React, {useState, useRef, useEffect} from 'react';
 import ThumbnailCanvas from "./ThumbnailCanvas";
 import {v4 as uuid} from 'uuid';
 import {History, POI, Point, Rect, Scale} from "./types";
+import CanvasPropertySetter from "./CanvasPropertySetter";
 
 const userOperations = {
     drawCorridor: "drawCorridor",
@@ -13,45 +14,170 @@ const generateUUID = () => {
     return uuid();
 };
 
-const POI_radius = 20;
-
-function facingAdjust(P1: Point, P2: Point): Point {
-    // 计算线段长度
-    const distance = Math.sqrt(Math.pow(P2.x - P1.x, 2) + Math.pow(P2.y - P1.y, 2));
-
-    // 计算单位向量
-    const unitVectorX = (P2.x - P1.x) / distance;
-    const unitVectorY = (P2.y - P1.y) / distance;
-
-    // 计算新点的坐标
-    const newX = P1.x + POI_radius * unitVectorX;
-    const newY = P1.y + POI_radius * unitVectorY;
-
-    return {x: newX, y: newY};
-}
-
 
 const Online2DDrawer = () => {
-    // State variables initialization
-    const [backgroundImage, setBackgroundImage] = useState<any>();
+    // key data
     const [rectangles, setRectangles] = useState<Rect[]>([]);
     const [POIs, setPOIs] = useState<POI[]>([]);
     const [scale, setScale] = useState<Scale>();
-    const [drawing, setDrawing] = useState(false); // Whether drawing rectangle or circle
-    const [userOperation, setUserOperation] = useState(userOperations.drawCorridor); // Type of shape to draw
+
+    // helper variable
+    const [backgroundImage, setBackgroundImage] = useState<any>();
     const [startPoint, setStartPoint] = useState<Point>({x: 0, y: 0}); // Starting point coordinates
     const [endPoint, setEndPoint] = useState<Point>({x: 0, y: 0}); // Diagonal point coordinates
-    const [canvasWidth] = useState<number>(800); // Canvas width
-    const [canvasHeight, setCanvasHeight] = useState<number>(600); // Canvas height
+
+    // user operation related
+    const [drawing, setDrawing] = useState(false); // Whether drawing rectangle or circle
+    const [userOperation, setUserOperation] = useState(userOperations.drawCorridor); // Type of shape to draw
     const [history, setHistory] = useState<History[]>([]); // 用于存储操作历史记录的数组
     const [redoHistory, setRedoHistory] = useState<History[]>([]); // 用于存储撤销的操作历史记录的数组
+
+    // canvas property
+    const [canvasWidth] = useState<number>(800); // Canvas width
+    const [canvasHeight, setCanvasHeight] = useState<number>(600); // Canvas height
+    const [displayVertex, setDisplayVertex] = useState<boolean>(false);
+    const [poiRadius, setPoiRadius] = useState<number>(20);
 
     // References for canvas elements
     const mainCanvasRef = useRef<any>(null);
     const backgroundCanvasRef = useRef<any>(null); // Ref for background image canvas
 
-    // 添加一个新的矩形到画布上，并记录操作历史
+    function facingAdjust(P1: Point, P2: Point, scale: number = 1): Point {
+        // 计算线段长度
+        const distance = Math.sqrt(Math.pow(P2.x - P1.x, 2) + Math.pow(P2.y - P1.y, 2));
 
+        // 计算单位向量
+        const unitVectorX = (P2.x - P1.x) / distance;
+        const unitVectorY = (P2.y - P1.y) / distance;
+
+        // 计算新点的坐标
+        const newX = P1.x + scale * unitVectorX;
+        const newY = P1.y + scale * unitVectorY;
+
+        return {x: newX, y: newY};
+    }
+
+    function facingDisplay(POI: POI, scale: number): Point {
+        return facingAdjust({x: POI.x, y: POI.y}, POI.facing, scale);
+    }
+
+
+    // Effect to draw shapes on the main canvas
+    useEffect(() => {
+        const mainCanvas = mainCanvasRef.current;
+        const main_ctx = mainCanvas.getContext('2d');
+
+        const drawCanvas = () => {
+            main_ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+            // draw rectangles
+            main_ctx.strokeStyle = 'red';
+            main_ctx.lineWidth = 2;
+
+            if (rectangles)
+                rectangles.forEach((rect: Rect) => {
+                    main_ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+
+                    // Draw vertex coordinates
+                    if (displayVertex) {
+                        main_ctx.fillStyle = 'blue';
+                        main_ctx.font = '16px Arial';
+                        main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y)})`, Math.round(rect.x) - 30, Math.round(rect.y) - 10);
+                        main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y)})`, Math.round(rect.x + rect.width), Math.round(rect.y) - 10);
+                        main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x + rect.width), Math.round(rect.y + rect.height) + 15);
+                        main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x) - 30, Math.round(rect.y + rect.height) + 15);
+                    }
+                });
+
+            // draw POIs
+            main_ctx.strokeStyle = 'orange';
+            main_ctx.lineWidth = 2;
+
+            if (POIs)
+                POIs.forEach(POI => {
+                    main_ctx.beginPath();
+                    main_ctx.arc(POI.x, POI.y, poiRadius, 0, 2 * Math.PI);
+                    main_ctx.stroke();
+                    main_ctx.closePath();
+
+                    // Draw POI name
+                    main_ctx.font = '16px Arial';
+                    main_ctx.fillText("." + POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
+
+                    // Draw facing direction
+                    main_ctx.beginPath();
+                    main_ctx.moveTo(POI.x, POI.y);
+                    const p: Point = facingDisplay(POI, poiRadius);
+                    main_ctx.lineTo(p.x, p.y);
+                    main_ctx.stroke();
+                });
+
+            // draw scale
+            if (scale) {
+                main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
+                main_ctx.lineWidth = 5; // 设置线段宽度为 2 像素
+
+                // 开始绘制线段
+                main_ctx.beginPath();
+                main_ctx.moveTo(scale.startPoint.x, scale.startPoint.y); // 设置线段起点
+                main_ctx.lineTo(scale.endPoint.x, scale.endPoint.y); // 设置线段终点
+                main_ctx.stroke();
+
+                // Draw vertex coordinates
+                main_ctx.fillStyle = 'blue';
+                main_ctx.font = '16px Arial';
+                main_ctx.fillText(scale.distanceInRealWorld + " m",
+                    Math.round(scale.startPoint.x + scale.endPoint.x) / 2 - 15,
+                    Math.round(scale.startPoint.y + scale.endPoint.y) / 2 - 10);
+            }
+
+
+            // for preview purpose: drawing temporary shape (from start point to current mouse position)
+            if (drawing) {
+                switch (userOperation) {
+                    case userOperations.drawCorridor:
+                        main_ctx.strokeStyle = 'red';
+                        main_ctx.lineWidth = 2;
+                        main_ctx.strokeRect(startPoint.x, startPoint.y, endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+                        break;
+                    case userOperations.addScale:
+                        main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
+                        main_ctx.lineWidth = 5; // 设置线段宽度为 2 像素
+
+                        // 开始绘制线段
+                        main_ctx.beginPath();
+                        main_ctx.moveTo(startPoint.x, startPoint.y); // 设置线段起点
+                        main_ctx.lineTo(endPoint.x, endPoint.y); // 设置线段终点
+                        main_ctx.stroke(); // 绘制线段
+
+                        break;
+
+                    case userOperations.drawPOI:
+                        // draw POIs
+                        main_ctx.strokeStyle = 'orange';
+                        main_ctx.lineWidth = 2;
+                        main_ctx.beginPath();
+                        main_ctx.arc(startPoint.x, startPoint.y, poiRadius, 0, 2 * Math.PI);
+                        main_ctx.stroke();
+                        main_ctx.closePath();
+
+                        // Draw facing direction
+                        const end = facingAdjust(startPoint, endPoint, poiRadius);
+
+                        main_ctx.beginPath();
+                        main_ctx.moveTo(startPoint.x, startPoint.y);
+                        main_ctx.lineTo(end.x, end.y);
+                        main_ctx.stroke();
+                        break;
+                    default:
+                        console.log("unknown user operation");
+                        break;
+                }
+            }
+        };
+
+        drawCanvas();
+    }, [rectangles, POIs, scale, drawing, startPoint, endPoint, userOperation, displayVertex, poiRadius]);
 
     const addScale = (newScale: Scale) => {
         setScale(newScale);
@@ -62,14 +188,16 @@ const Online2DDrawer = () => {
         setRectangles(prevRectangles => [...prevRectangles, newRectangle]);
         setHistory(prevHistory => [...prevHistory, {type: userOperations.drawCorridor, args: newRectangle}]); // 记录操作历史
     };
+
     const addPOI = (newPOI: POI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
         setHistory(prevHistory => [...prevHistory, {type: userOperations.drawPOI, args: newPOI}]); // 记录操作历史
     };
+
     const previewPOI = (newPOI: POI) => {
         setPOIs(prevPOIs => [...prevPOIs, newPOI]);
     };
-    // 撤销最后一个操作
+
     const undo = () => {
         if (history) {
             console.log("history length: " + history.length);
@@ -119,120 +247,6 @@ const Online2DDrawer = () => {
             setRedoHistory(prevRedoHistory => prevRedoHistory.slice(0, -1)); // 从重做历史中移除最后一个操作
         }
     };
-
-
-    // Effect to draw shapes on the main canvas
-    useEffect(() => {
-        const mainCanvas = mainCanvasRef.current;
-        const main_ctx = mainCanvas.getContext('2d');
-
-        const drawCanvas = () => {
-            main_ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
-            // draw rectangles
-            main_ctx.strokeStyle = 'red';
-            main_ctx.lineWidth = 2;
-
-            if (rectangles)
-                rectangles.forEach((rect: Rect) => {
-                    main_ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-                    // Draw vertex coordinates
-                    main_ctx.fillStyle = 'blue';
-                    main_ctx.font = '16px Arial';
-                    main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y)})`, Math.round(rect.x) - 30, Math.round(rect.y) - 10);
-                    main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y)})`, Math.round(rect.x + rect.width), Math.round(rect.y) - 10);
-                    main_ctx.fillText(`(${Math.round(rect.x + rect.width)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x + rect.width), Math.round(rect.y + rect.height) + 15);
-                    main_ctx.fillText(`(${Math.round(rect.x)}, ${Math.round(rect.y + rect.height)})`, Math.round(rect.x) - 30, Math.round(rect.y + rect.height) + 15);
-                });
-
-            // draw POIs
-            main_ctx.strokeStyle = 'orange';
-            main_ctx.lineWidth = 2;
-
-            if (POIs)
-                POIs.forEach(POI => {
-                    main_ctx.beginPath();
-                    main_ctx.arc(POI.x, POI.y, POI_radius, 0, 2 * Math.PI);
-                    main_ctx.stroke();
-                    main_ctx.closePath();
-
-                    // Draw POI name
-                    main_ctx.font = '16px Arial';
-                    main_ctx.fillText("." + POI.name, Math.round(POI.x) - 15, Math.round(POI.y) - 15);
-
-                    // Draw facing direction
-                    main_ctx.beginPath();
-                    main_ctx.moveTo(POI.x, POI.y);
-                    main_ctx.lineTo(POI.facing.x, POI.facing.y);
-                    main_ctx.stroke();
-                });
-
-            // draw scale
-            if (scale) {
-                main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
-                main_ctx.lineWidth = 5; // 设置线段宽度为 2 像素
-
-                // 开始绘制线段
-                main_ctx.beginPath();
-                main_ctx.moveTo(scale.startPoint.x, scale.startPoint.y); // 设置线段起点
-                main_ctx.lineTo(scale.endPoint.x, scale.endPoint.y); // 设置线段终点
-                main_ctx.stroke();
-
-                // Draw vertex coordinates
-                main_ctx.fillStyle = 'blue';
-                main_ctx.font = '16px Arial';
-                main_ctx.fillText(scale.distanceInRealWorld + " m",
-                    Math.round(scale.startPoint.x + scale.endPoint.x) / 2 - 15,
-                    Math.round(scale.startPoint.y + scale.endPoint.y) / 2 - 10);
-            }
-
-
-            // for preview purpose: drawing temporary shape (from start point to current mouse position)
-            if (drawing) {
-                switch (userOperation) {
-                    case userOperations.drawCorridor:
-                        main_ctx.strokeStyle = 'red';
-                        main_ctx.lineWidth = 2;
-                        main_ctx.strokeRect(startPoint.x, startPoint.y, endPoint.x - startPoint.x, endPoint.y - startPoint.y);
-                        break;
-                    case userOperations.addScale:
-                        main_ctx.strokeStyle = 'black'; // 设置线段颜色为黑色
-                        main_ctx.lineWidth = 5; // 设置线段宽度为 2 像素
-
-                        // 开始绘制线段
-                        main_ctx.beginPath();
-                        main_ctx.moveTo(startPoint.x, startPoint.y); // 设置线段起点
-                        main_ctx.lineTo(endPoint.x, endPoint.y); // 设置线段终点
-                        main_ctx.stroke(); // 绘制线段
-
-                        break;
-
-                    case userOperations.drawPOI:
-                        // draw POIs
-                        main_ctx.strokeStyle = 'orange';
-                        main_ctx.lineWidth = 2;
-                        main_ctx.beginPath();
-                        main_ctx.arc(startPoint.x, startPoint.y, POI_radius, 0, 2 * Math.PI);
-                        main_ctx.stroke();
-                        main_ctx.closePath();
-
-                        // Draw facing direction
-                        const end = facingAdjust(startPoint, endPoint);
-
-                        main_ctx.beginPath();
-                        main_ctx.moveTo(startPoint.x, startPoint.y);
-                        main_ctx.lineTo(end.x, end.y);
-                        main_ctx.stroke();
-                        break;
-                    default:
-                        console.log("unknown user operation");
-                        break;
-                }
-            }
-        };
-
-        drawCanvas();
-    }, [rectangles, POIs, scale, drawing, startPoint, endPoint, userOperation]);
 
     // Function to handle image upload
     const handleImageUpload = (event: any) => {
@@ -444,6 +458,10 @@ const Online2DDrawer = () => {
                     <option value={userOperations.addScale}>add scale</option>
                 </select>
             </div>
+            <CanvasPropertySetter displayVertex={displayVertex}
+                                  onDisplayVertexChange={setDisplayVertex}
+                                  onPoiRadiusChange={setPoiRadius}
+                                  poiRadius={poiRadius}/>
         </div>
     );
 };
