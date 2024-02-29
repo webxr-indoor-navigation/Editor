@@ -149,7 +149,17 @@ const ThumbnailCanvas = (props: ThumbnailCanvasProps) => {
                     point.Y *= ratio;
                 });
             });
-            const json = JSON.stringify(copy)
+
+            // 使用 map 方法对每个子数组进行操作
+            const renamedObj = copy.map(innerArray =>
+                innerArray.map(innerObj => {
+                    // 使用类型断言和对象解构重命名键名
+                    const {X: x, Y: y} = innerObj;
+                    return {x, y};
+                })
+            );
+
+            const json = JSON.stringify(renamedObj)
             const blob = new Blob([json], {type: 'application/json'});
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');

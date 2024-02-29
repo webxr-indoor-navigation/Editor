@@ -305,7 +305,7 @@ const Online2DDrawer = () => {
                     const height = Math.abs(endPoint.y - startPoint.y); // Calculate rectangle height
                     const newX = Math.min(startPoint.x, endPoint.x);
                     const newY = Math.min(startPoint.y, endPoint.y);
-                    addRectangle({x: newX, y: newY, width, height})
+                    addRectangle({x: newX, y: newY, width: width, height: height})
                     setDrawing(false);
                 }
                 break;
