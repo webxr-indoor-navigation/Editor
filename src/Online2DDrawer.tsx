@@ -450,18 +450,20 @@ const Online2DDrawer = () => {
                 <ThumbnailCanvas mainCanvasWidth={canvasWidth} mainCanvasHeight={canvasHeight} rectangles={rectangles}
                                  POIs={POIs} scale={scale}/>
             </div>
-            <div>
+            <div >
                 <label htmlFor="shapeType">User Operation:</label>
                 <select id="shapeType" value={userOperation} onChange={handleShapeTypeChange}>
                     <option value={userOperations.drawCorridor}>draw corridor (walkable area)</option>
                     <option value={userOperations.drawPOI}>add POI (destination)</option>
                     <option value={userOperations.addScale}>add scale</option>
                 </select>
-            </div>
-            <CanvasPropertySetter displayVertex={displayVertex}
+
+                <CanvasPropertySetter displayVertex={displayVertex}
                                   onDisplayVertexChange={setDisplayVertex}
                                   onPoiRadiusChange={setPoiRadius}
                                   poiRadius={poiRadius}/>
+            </div>
+
         </div>
     );
 };

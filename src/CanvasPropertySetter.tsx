@@ -18,15 +18,15 @@ const CanvasPropertySetter: React.FC<CanvasPropertySetterProps> = ({ displayVert
     };
 
     return (
-        <div>
+        <div style={{textAlign: 'right'}}>
+            <label>Display vertex coordinates for rectangles &nbsp;</label>
             <input
                 type="checkbox"
                 checked={displayVertex}
                 onChange={handleBooleanChange}
             />
-            <label>Boolean Value</label>
-            <br />
-            <label>Number Value: {poiRadius}</label>
+            <br/>
+            <label>POI radius: {poiRadius}</label>
             <input
                 type="range"
                 min={10}
